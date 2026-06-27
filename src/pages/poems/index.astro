@@ -1,0 +1,96 @@
+---
+import Base from '../../layouts/Base.astro';
+import { poems } from '../../lib/data.js';
+
+const arr = (v) => (Array.isArray(v) ? v : v ? [v] : []);
+const join = (v) => arr(v).join('、');
+const types = [...new Set(poems.flatMap((p) => arr(p.poemType)))].filter(Boolean);
+const owners = [...new Set(poems.flatMap((p) => arr(p.owner)))].filter(Boolean);
+const singles = poems.filter((p) => p.kind === '诗词单篇');
+const scenes = poems.filter((p) => p.kind === '诗词场景');
+---
+
+<Base title="诗词" description="红楼梦诗词 —— 判词、红楼梦曲、海棠菊花诗社与联句名篇，按体裁、归属人物浏览鉴赏。">
+  <div class="wrap">
+    <header class="phead" data-reveal>
+      <span class="seal seal--lg">诗词</span>
+      <h1>诗以言志</h1>
+      <p class="tagline">{singles.length} 篇单篇 · {scenes.length} 处场景 · 判词曲文 · 诗社联句</p>
+    </header>
+
+    <section class="filters" data-reveal aria-label="筛选">
+      <div class="frow"><span class="flabel">体裁</span>{types.map((t) => <button class="chip" type="button" data-key="type" data-val={t}>{t}</button>)}</div>
+      <div class="frow"><span class="flabel">归属</span>{owners.map((o) => <button class="chip" type="button" data-key="owner" data-val={o}>{o}</button>)}</div>
+    </section>
+
+    <ul class="grid" id="plist">
+      {singles.map((p) => (
+        <li data-card data-type={join(p.poemType)} data-owner={join(p.owner)}>
+          <a href={`/poems/${p.slug}`} class="card plain pcard">
+            <div class="ptop">
+              <span class="pt">{p.title}</span>
+              {p.poemType && <span class="tag tag--accent">{join(p.poemType)}</span>}
+            </div>
+            <p class="pmeta">{[join(p.owner), join(p.chapter), join(p.scene)].filter(Boolean).join(' · ')}</p>
+          </a>
+        </li>
+      ))}
+    </ul>
+    <p class="count" id="count" aria-live="polite"></p>
+
+    {scenes.length > 0 && (
+      <section class="scene-sec" data-reveal>
+        <h2 class="sec-h">诗词场景</h2>
+        <ul class="grid">
+          {scenes.map((p) => (
+            <li><a href={`/poems/${p.slug}`} class="card plain pcard"><span class="pt">{p.title}</span><p class="pmeta">{join(p.scene) || '名场面'}</p></a></li>
+          ))}
+        </ul>
+      </section>
+    )}
+  </div>
+
+  <script is:inline>
+    (() => {
+      const active = { type: '', owner: '' };
+      const chips = [...document.querySelectorAll('.chip')];
+      const cards = [...document.querySelectorAll('#plist [data-card]')];
+      const countEl = document.getElementById('count');
+      const update = () => {
+        let n = 0;
+        cards.forEach((c) => {
+          const ok = (!active.type || c.dataset.type.split('、').includes(active.type))
+            && (!active.owner || c.dataset.owner.split('、').includes(active.owner));
+          c.hidden = !ok; if (ok) n++;
+        });
+        chips.forEach((b) => b.classList.toggle('on', active[b.dataset.key] === b.dataset.val));
+        countEl.textContent = active.type || active.owner ? `符合：${n} 篇` : '';
+      };
+      chips.forEach((b) => b.addEventListener('click', () => {
+        const k = b.dataset.key; active[k] = active[k] === b.dataset.val ? '' : b.dataset.val; update();
+      }));
+    })();
+  </script>
+
+  <style>
+    .phead { text-align: center; margin-bottom: 2.4rem; }
+    .phead h1 { font-size: clamp(2.2rem, 1.6rem + 3vw, 3.4rem); margin-top: .8rem; }
+    .tagline { color: var(--ink-faint); margin-top: .6rem; letter-spacing: .05em; }
+    .filters { display: grid; gap: .7rem; margin-bottom: 2rem; }
+    .frow { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+    .flabel { font-size: .85rem; color: var(--ink-faint); margin-right: .3rem; min-width: 2.4em; }
+    .chip { font-family: var(--serif); font-size: .88rem; padding: .22em .85em; border: 1px solid var(--ink-hair); background: var(--paper); color: var(--ink-2); border-radius: 999px; cursor: pointer; transition: all var(--speed) var(--ease); }
+    .chip:hover { border-color: var(--cinnabar); color: var(--cinnabar); }
+    .chip.on { background: var(--cinnabar); border-color: var(--cinnabar); color: #fff; }
+    .grid { list-style: none; padding: 0; display: grid; gap: .9rem; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); }
+    .pcard { display: flex; flex-direction: column; gap: .5rem; padding: 1.1rem 1.2rem; }
+    .ptop { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem .6rem; }
+    .pt { font-size: 1.3rem; font-weight: 700; color: var(--ink); line-height: 1.35; flex: 1 1 auto; min-width: 60%; }
+    .ptop .tag { flex: 0 0 auto; margin-left: auto; }
+    .pmeta { font-size: .84rem; color: var(--ink-faint); line-height: 1.5; }
+    .count { text-align: center; color: var(--ink-faint); margin-top: 1.4rem; min-height: 1.2em; }
+    .scene-sec { margin-top: 3rem; }
+    .sec-h { font-size: 1.4rem; border-bottom: 1px solid var(--ink-hair); padding-bottom: .7rem; margin-bottom: 1.4rem; position: relative; }
+    .sec-h::before { content: ""; position: absolute; left: 0; bottom: -1px; width: 2.6rem; height: 2px; background: var(--cinnabar); }
+  </style>
+</Base>

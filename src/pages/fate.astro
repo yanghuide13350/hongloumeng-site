@@ -1,0 +1,357 @@
+---
+import Base from '../layouts/Base.astro';
+import { fate, familyColor } from '../lib/data.js';
+
+const arr = (v) => (Array.isArray(v) ? v.join('、') : v || '');
+const ranks = [
+  ['正册', '正册十二钗', '太虚幻境正册，金陵十二位主角的命运总纲'],
+  ['副册', '副册', '原著仅写出香菱一人之判词'],
+  ['又副册', '又副册', '原著仅写出晴雯、袭人二人之判词'],
+];
+// 从判词 HTML 中抽出「判词全文」（原文那一行的 code 内容）
+const firstCode = (html) => {
+  const m = (html || '').match(/<code>([\s\S]*?)<\/code>/);
+  return m ? m[1].replace(/&quot;/g, '"').trim() : '';
+};
+// 判词全文按句拆行，便于竖向呈现
+const verseLines = (s) => s.split(/(?<=[。？！])/).map((x) => x.trim()).filter(Boolean);
+const fateList = fate.map((f) => ({ ...f, verse: firstCode(f.verdict) }));
+const byRankList = (r) => fateList.filter((f) => f.rank === r);
+---
+
+<Base title="命运·判词" description="判词曲文如何在后四十回一一应验 —— 前八十回伏笔与终局落地的对照。">
+  <div class="wrap">
+    <header class="phead" data-reveal>
+      <span class="seal seal--lg">命运</span>
+      <h1>判词应验</h1>
+      <p class="tagline">太虚幻境的判词曲文，如何在后四十回一一落地</p>
+      <p class="intro">
+        第五回，宝玉于太虚幻境翻开金陵十二钗册子——每一句判词都是一道未拆的封印。
+        下列各人皆为一轴<strong>卷起的命运</strong>，点开卷轴，左为<strong>前八十回的判词伏笔</strong>，右为<strong>后四十回的终局落地</strong>。
+      </p>
+      <p class="note">
+        此处仅收录册中有判词者：正册十二钗俱全，副册、又副册原著仅写出香菱与晴雯、袭人三人，故止于此；
+        其余人物未入太虚幻境册子，自无判词可应。
+      </p>
+    </header>
+
+    {ranks.map(([r, label, blurb]) => byRankList(r).length > 0 && (
+      <section class="rank-sec" data-reveal>
+        <h2 class="sec-h">{label}<span class="cnt">{byRankList(r).length} 轴</span></h2>
+        <p class="sec-blurb">{blurb}<span class="hint">— 点击卷轴展开</span></p>
+
+        <div class="shelf">
+          {byRankList(r).map((f, i) => (
+            <article class="scroll" style={`--fc:${familyColor(f.family)}`}>
+              {/* 卷起的卷轴 —— 闭合态（整行横轴，待左右展开） */}
+              <button class="scroll-rolled" type="button" aria-expanded="false"
+                aria-label={`展开 ${f.title} 的判词`}>
+                <span class="cap cap-left" aria-hidden="true"></span>
+                <span class="furl">
+                  <span class="idx">{String(i + 1).padStart(2, '0')}</span>
+                  <span class="r-main">
+                    <span class="r-name">{f.title}</span>
+                    <span class="r-verse">{f.verdictKw || verseLines(f.verse)[0] || ''}</span>
+                  </span>
+                  <span class="r-side">
+                    <span class="seal r-seal">{f.rank.slice(-1)}</span>
+                    <span class="r-foot">{f.family}</span>
+                  </span>
+                  <span class="r-open" aria-hidden="true">展开 ▸</span>
+                </span>
+                <span class="roll-end" aria-hidden="true"></span>
+                <span class="cap cap-right" aria-hidden="true"></span>
+              </button>
+
+              {/* 展开的卷轴 —— 打开态（左右双轴） */}
+              <div class="scroll-unrolled">
+                <span class="pole pole-left" aria-hidden="true"></span>
+                <div class="paper">
+                  <button class="u-close" type="button" aria-label="收起卷轴">收起 ▴</button>
+
+                  <div class="u-head">
+                    <span class="u-idx">{String(i + 1).padStart(2, '0')}</span>
+                    <div class="u-title">
+                      <a href={`/characters/${f.slug}`} class="u-name plain">{f.title}</a>
+                      <span class="u-fam">{f.rank} · {f.family}</span>
+                    </div>
+                    {f.fate && <span class="u-fate"><span class="u-fate-k">结局</span>{arr(f.fate)}</span>}
+                  </div>
+
+                  <div class="u-verse-wrap">
+                    {f.verse ? (
+                      <p class="u-verse">
+                        {verseLines(f.verse).map((ln) => <span class="vl">{ln}</span>)}
+                      </p>
+                    ) : (
+                      f.verdictKw && <p class="u-verse"><span class="vl">{f.verdictKw}</span></p>
+                    )}
+                  </div>
+
+                  {(f.verdict || f.fulfill) && (
+                    <div class="u-body">
+                      <div class="col">
+                        <p class="col-h">判词 · 伏笔</p>
+                        {f.verdict ? <div class="prose mini" set:html={f.verdict} /> : <p class="empty">详见人物页</p>}
+                      </div>
+                      <div class="col col-fulfill">
+                        <p class="col-h">后四十回 · 落地</p>
+                        {f.fulfill ? <div class="prose mini" set:html={f.fulfill} /> : <p class="empty">详见人物页</p>}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <span class="pole pole-right" aria-hidden="true"></span>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    ))}
+
+    <p class="foot-note" data-reveal>
+      想看完整命运速查？前往 <a href="/charts">图表 · 判词应验总表</a>，或回到 <a href="/characters">人物</a> 逐一品读。
+    </p>
+  </div>
+
+  <style>
+    .phead { text-align: center; margin-bottom: 3rem; }
+    .phead h1 { font-size: clamp(2.4rem, 1.7rem + 3.4vw, 3.8rem); margin-top: .8rem; }
+    .tagline { color: var(--ink-2); margin-top: .7rem; letter-spacing: .05em; font-size: 1.1rem; }
+    .intro { max-width: 40rem; margin: 1.4rem auto 0; color: var(--ink-faint); line-height: 2; }
+    .intro strong { color: var(--cinnabar); }
+    .note { max-width: 40rem; margin: .9rem auto 0; font-size: .86rem; color: var(--ink-faint); line-height: 1.9; padding: .7rem 1rem; border: 1px dashed var(--ink-hair); border-radius: var(--radius); background: color-mix(in srgb, var(--gold) 5%, transparent); }
+    .sec-h { font-size: 1.5rem; border-bottom: 1px solid var(--ink-hair); padding-bottom: .7rem; margin: 3rem 0 .4rem; position: relative; display: flex; align-items: baseline; gap: .7rem; }
+    .sec-h::before { content: ""; position: absolute; left: 0; bottom: -1px; width: 2.6rem; height: 2px; background: var(--cinnabar); }
+    .sec-h .cnt { font-size: .9rem; color: var(--ink-faint); font-weight: 400; }
+    .sec-blurb { color: var(--ink-faint); font-size: .9rem; margin: 0 0 1.6rem; }
+    .sec-blurb .hint { margin-left: .6rem; color: var(--cinnabar); letter-spacing: .04em; }
+
+    /* —— 卷架：每行一轴，整列对齐 —— */
+    .shelf {
+      display: flex; flex-direction: column; gap: 1.1rem;
+    }
+
+    /* —— 黑漆轴头（默认横条，用于打开态上下轴）—— */
+    .cap {
+      position: relative; display: block; height: 13px; border-radius: 7px;
+      width: calc(100% + 26px); margin-left: -13px;
+      background:
+        linear-gradient(180deg, #4a4a52 0%, #1c1c22 46%, #050507 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.22), inset 0 -2px 3px rgba(0,0,0,.5),
+        0 2px 5px -2px rgba(0,0,0,.5);
+    }
+    .cap::before, .cap::after {
+      content: ""; position: absolute; top: 50%; width: 13px; height: 17px;
+      transform: translateY(-50%); border-radius: 5px;
+      background: linear-gradient(180deg, #6a6a72, #16161b 70%, #000);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 2px 4px -1px rgba(0,0,0,.55);
+    }
+    .cap::before { left: -4px; }
+    .cap::after  { right: -4px; }
+    .cap-top, .cap-bottom { z-index: 3; }
+
+    /* —— 竖向轴头（闭合态左右两端）—— */
+    .cap-left, .cap-right {
+      position: relative; flex: 0 0 14px; align-self: stretch;
+      width: 14px; height: calc(100% + 18px); margin: -9px 0; border-radius: 7px;
+      background: linear-gradient(90deg, #4a4a52 0%, #1c1c22 46%, #050507 100%);
+      box-shadow: inset 1px 0 0 rgba(255,255,255,.22), inset -2px 0 3px rgba(0,0,0,.5),
+        0 2px 5px -2px rgba(0,0,0,.5);
+      z-index: 3;
+    }
+    .cap-left::before, .cap-left::after,
+    .cap-right::before, .cap-right::after {
+      content: ""; position: absolute; left: 50%; width: 18px; height: 13px;
+      transform: translateX(-50%); border-radius: 5px;
+      background: linear-gradient(90deg, #6a6a72, #16161b 70%, #000);
+      box-shadow: inset 1px 0 0 rgba(255,255,255,.3), 0 2px 4px -1px rgba(0,0,0,.55);
+    }
+    .cap-left::before, .cap-right::before { top: -4px; }
+    .cap-left::after,  .cap-right::after  { bottom: -4px; }
+
+    /* —— 闭合态：横躺的画轴 —— */
+    .scroll-rolled {
+      display: flex; flex-direction: row; align-items: stretch;
+      width: 100%; padding: 0; border: 0; background: none; cursor: pointer;
+      font: inherit; color: inherit; -webkit-tap-highlight-color: transparent;
+    }
+    .furl {
+      position: relative; flex: 1; min-width: 0; min-height: 5.6rem;
+      display: flex; flex-direction: row; align-items: center; gap: .9rem;
+      padding: .9rem 1.1rem;
+      /* 宣纸横铺：上下渐暗模拟卷曲弧面 */
+      background:
+        linear-gradient(180deg,
+          rgba(0,0,0,.18) 0%, rgba(0,0,0,.05) 8%,
+          color-mix(in srgb, var(--paper-2) 100%, transparent) 26%,
+          color-mix(in srgb, var(--paper-2) 100%, transparent) 74%,
+          rgba(0,0,0,.06) 92%, rgba(0,0,0,.2) 100%),
+        var(--paper-2);
+      border-top: 1px solid color-mix(in srgb, var(--ink) 16%, transparent);
+      border-bottom: 1px solid color-mix(in srgb, var(--ink) 16%, transparent);
+      box-shadow: var(--shadow-sm);
+      transition: transform var(--speed) var(--ease), box-shadow var(--speed) var(--ease);
+    }
+    .scroll-rolled:hover .furl { transform: translateY(-3px); box-shadow: var(--shadow); }
+    .scroll-rolled:hover .r-name { color: var(--cinnabar); }
+
+    .idx {
+      flex: 0 0 auto; font-family: var(--serif); font-size: 1.4rem; font-weight: 700;
+      color: color-mix(in srgb, var(--fc) 72%, var(--ink-faint)); letter-spacing: .04em;
+      line-height: 1; padding-right: .85rem;
+      border-right: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+    }
+    .r-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: .3rem; }
+    .r-name {
+      font-family: var(--serif); font-weight: 800; font-size: 1.4rem;
+      letter-spacing: .08em; color: var(--ink); line-height: 1.2;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      transition: color var(--speed) var(--ease);
+    }
+    .r-verse {
+      font-family: var(--serif); font-size: .82rem; letter-spacing: .06em;
+      color: var(--cinnabar); opacity: .85; line-height: 1.4;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .r-side {
+      flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end;
+      gap: .45rem; padding-left: .6rem;
+    }
+    .r-seal { font-size: .56rem; padding: .4em .26em; letter-spacing: .1em; opacity: .92; }
+    .r-foot { font-size: .72rem; color: var(--fc); letter-spacing: .08em; white-space: nowrap; }
+    .r-open {
+      flex: 0 0 auto; align-self: center; margin-left: .3rem; padding-left: 1rem;
+      font-size: .8rem; letter-spacing: .1em; color: var(--cinnabar); white-space: nowrap;
+      border-left: 1px dashed color-mix(in srgb, var(--ink) 14%, transparent);
+      transition: transform var(--speed) var(--ease);
+    }
+    .scroll-rolled:hover .r-open { transform: translateX(3px); }
+
+    /* —— 右端卷起的纸卷（暗示向右展开）—— */
+    .roll-end {
+      flex: 0 0 2.1rem; align-self: stretch; position: relative; margin-left: -1px;
+      background:
+        repeating-linear-gradient(90deg,
+          color-mix(in srgb, var(--paper-2) 100%, transparent) 0 5px,
+          rgba(0,0,0,.05) 5px 6px),
+        linear-gradient(90deg,
+          color-mix(in srgb, var(--paper-2) 100%, transparent) 0%,
+          rgba(0,0,0,.05) 55%, rgba(0,0,0,.16) 88%, rgba(0,0,0,.28) 100%);
+      border-top: 1px solid color-mix(in srgb, var(--ink) 16%, transparent);
+      border-bottom: 1px solid color-mix(in srgb, var(--ink) 16%, transparent);
+      box-shadow: var(--shadow-sm);
+      border-radius: 0 4px 4px 0;
+    }
+
+    /* 闭合 / 打开切换 */
+    .scroll-unrolled { display: none; }
+    .scroll.open .scroll-rolled { display: none; }
+    .scroll.open .scroll-unrolled {
+      display: flex; align-items: stretch; animation: drop .45s var(--ease) both;
+    }
+    @keyframes drop { from { opacity: 0; } to { opacity: 1; } }
+
+    /* —— 打开态：左右两根竖直轴杆 —— */
+    .pole {
+      position: relative; flex: 0 0 16px; align-self: stretch; border-radius: 8px; z-index: 3;
+      background: linear-gradient(90deg, #4a4a52 0%, #1c1c22 46%, #050507 100%);
+      box-shadow: inset 1px 0 0 rgba(255,255,255,.22), inset -2px 0 3px rgba(0,0,0,.5),
+        0 3px 8px -3px rgba(0,0,0,.55);
+    }
+    .pole::before, .pole::after {
+      content: ""; position: absolute; left: 50%; width: 20px; height: 14px;
+      transform: translateX(-50%); border-radius: 5px;
+      background: linear-gradient(90deg, #6a6a72, #16161b 70%, #000);
+      box-shadow: inset 1px 0 0 rgba(255,255,255,.3), 0 2px 5px -1px rgba(0,0,0,.55);
+    }
+    .pole::before { top: -5px; }
+    .pole::after  { bottom: -5px; }
+    .pole-left  { margin-right: -3px; }
+    .pole-right { margin-left: -3px; }
+
+    .paper {
+      position: relative; overflow: hidden; flex: 1; min-width: 0;
+      background:
+        linear-gradient(90deg, rgba(0,0,0,.12) 0, transparent 2.2%, transparent 97.8%, rgba(0,0,0,.12) 100%),
+        var(--paper-2);
+      border-top: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+      border-bottom: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+      box-shadow: var(--shadow);
+      padding: 1.8rem clamp(1.2rem, 3vw, 2.6rem) 2rem;
+      transform-origin: center; animation: unroll .6s var(--ease) both;
+    }
+    @keyframes unroll { from { clip-path: inset(0 50% 0 50%); opacity: .4; } to { clip-path: inset(0 0 0 0); opacity: 1; } }
+
+    .u-close {
+      position: absolute; top: .8rem; right: 1rem; border: 1px solid var(--ink-hair);
+      background: var(--paper-2); color: var(--ink-faint); border-radius: 999px;
+      font: inherit; font-size: .76rem; letter-spacing: .06em; padding: .2em .9em; cursor: pointer;
+      transition: color var(--speed) var(--ease), border-color var(--speed) var(--ease);
+    }
+    .u-close:hover { color: var(--cinnabar); border-color: color-mix(in srgb, var(--cinnabar) 45%, var(--ink-hair)); }
+
+    .u-head { display: flex; align-items: center; gap: .9rem; flex-wrap: wrap; padding-right: 4.5rem;
+      border-left: 3px solid var(--fc); padding-left: 1rem; }
+    .u-idx { font-family: var(--serif); font-size: 1.5rem; font-weight: 700; color: color-mix(in srgb, var(--fc) 70%, var(--ink-faint)); }
+    .u-title { display: flex; align-items: baseline; gap: .7rem; flex-wrap: wrap; }
+    .u-name { font-size: 1.7rem; font-weight: 800; font-family: var(--serif); color: var(--ink); }
+    .u-fam { font-size: .8rem; color: var(--fc); letter-spacing: .08em; }
+    .u-fate { margin-left: auto; font-size: .92rem; color: var(--ink-2); }
+    .u-fate-k { display: inline-block; margin-right: .55rem; font-size: .72rem; font-weight: 700; letter-spacing: .12em;
+      color: #fff; background: var(--cinnabar); padding: .12em .6em; border-radius: 3px; vertical-align: .08em; }
+
+    .u-verse-wrap { margin: 1.3rem 0 1.1rem; padding: 1rem 1.2rem; border-radius: var(--radius);
+      background: color-mix(in srgb, var(--gold) 6%, transparent);
+      border-left: 2px solid color-mix(in srgb, var(--gold) 55%, transparent); }
+    .u-verse { display: flex; flex-wrap: wrap; gap: .15rem 1.2rem; font-family: var(--serif);
+      font-size: 1.3rem; line-height: 1.95; letter-spacing: .07em; color: var(--cinnabar); }
+    .u-verse .vl { white-space: nowrap; }
+
+    .u-body { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; margin-top: .4rem;
+      border: 1px solid var(--ink-hair); border-radius: var(--radius); overflow: hidden; background: var(--ink-hair); }
+    .col { padding: 1.2rem 1.4rem; background: var(--paper-2); }
+    .col-fulfill { background: color-mix(in srgb, var(--cinnabar) 4%, var(--paper-2)); }
+    .col-h { font-size: .78rem; letter-spacing: .14em; color: var(--cinnabar); font-weight: 700; margin-bottom: .9rem;
+      padding-bottom: .5rem; border-bottom: 1px dashed var(--ink-hair); }
+    .mini { font-size: .9rem; }
+    .mini :global(h3) { font-size: 1rem; margin-top: 1rem; color: var(--ink); }
+    .mini :global(blockquote) { font-size: .95rem; padding: .8rem 1rem; text-align: left; margin: .8rem 0; }
+    .mini :global(ul) { padding-left: 1.1rem; }
+    .mini :global(table) { font-size: .85rem; }
+    .empty { color: var(--ink-faint); font-style: italic; }
+
+    .foot-note { text-align: center; margin-top: 3.5rem; color: var(--ink-faint); }
+
+    @media (max-width: 680px) {
+      .shelf { gap: .9rem; }
+      .furl { min-height: 5rem; padding: .8rem .95rem; gap: .7rem; }
+      .idx { font-size: 1.25rem; padding-right: .7rem; }
+      .r-name { font-size: 1.28rem; }
+      .r-open { display: none; }
+      .roll-end { flex-basis: 1.3rem; }
+      .u-body { grid-template-columns: 1fr; }
+      .u-fate { margin-left: 0; width: 100%; }
+    }
+  </style>
+
+  <script is:inline>
+    document.addEventListener('click', (e) => {
+      const opener = e.target.closest('.scroll-rolled');
+      if (opener) {
+        const art = opener.closest('.scroll');
+        art.classList.add('open');
+        opener.setAttribute('aria-expanded', 'true');
+        return;
+      }
+      const closer = e.target.closest('.u-close');
+      if (closer) {
+        const art = closer.closest('.scroll');
+        art.classList.remove('open');
+        const btn = art.querySelector('.scroll-rolled');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+        art.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    });
+  </script>
+</Base>

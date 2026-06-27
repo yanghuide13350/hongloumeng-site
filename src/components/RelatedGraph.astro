@@ -1,0 +1,44 @@
+---
+// 详情页侧栏：以当前节点为中心的局部关系放射图（SSR 静态 SVG，零 JS）
+import { neighborsOf, familyColor } from '../lib/data.js';
+const { id, title } = Astro.props;
+const ns = neighborsOf(id, 12);
+
+const W = 360, H = 360, cx = W / 2, cy = H / 2, R = 130;
+const maxW = Math.max(1, ...ns.map((n) => n.weight));
+const short = (s, n = 5) => (s && [...s].length > n ? [...s].slice(0, n).join('') + '…' : s || '');
+const pts = ns.map((n, i) => {
+  const a = (i / ns.length) * Math.PI * 2 - Math.PI / 2;
+  return { ...n, x: +(cx + R * Math.cos(a)).toFixed(1), y: +(cy + R * Math.sin(a)).toFixed(1) };
+});
+---
+
+{ns.length > 0 && (
+  <figure class="relgraph" data-reveal>
+    <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${title} 的关系网络`}>
+      {pts.map((p) => (
+        <line x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="var(--ink-hair)" stroke-width={0.6 + (p.weight / maxW) * 2.4} />
+      ))}
+      {pts.map((p) => (
+        <a href={`/${p.node.typeRoute}/${p.node.slug}`} class="node">
+          <circle cx={p.x} cy={p.y} r={6 + (p.weight / maxW) * 5} fill={familyColor(p.node.family)} />
+          <text x={p.x} y={p.y} dy={p.y < cy ? -12 : 19} text-anchor="middle" class="lbl">{short(p.node.title, 5)}</text>
+        </a>
+      ))}
+      <circle cx={cx} cy={cy} r="27" fill="var(--cinnabar)" />
+      <text x={cx} y={cy} text-anchor="middle" dominant-baseline="central" class="ctr">{short(title, 4)}</text>
+    </svg>
+    <figcaption>关系网络 · {ns.length} 个相关词条</figcaption>
+  </figure>
+)}
+
+<style>
+  .relgraph { margin: 0; }
+  .relgraph svg { width: 100%; height: auto; overflow: visible; }
+  .lbl { font-size: 11px; fill: var(--ink-2); font-family: var(--serif); transition: fill var(--speed) var(--ease); }
+  .ctr { font-size: 13px; fill: #fff; font-weight: 700; font-family: var(--serif); }
+  .node circle { transition: stroke var(--speed) var(--ease); }
+  .node:hover .lbl { fill: var(--cinnabar); font-weight: 700; }
+  .node:hover circle { stroke: var(--cinnabar); stroke-width: 2.5; }
+  figcaption { text-align: center; font-size: .8rem; color: var(--ink-faint); margin-top: .6rem; letter-spacing: .04em; }
+</style>

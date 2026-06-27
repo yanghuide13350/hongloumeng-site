@@ -1,0 +1,128 @@
+---
+import Base from '../../layouts/Base.astro';
+import { characters, familyColor, pageById } from '../../lib/data.js';
+
+const imgOf = (id) => pageById(id)?.images?.[0] || null;
+const RANK_ORDER = { 正册: 0, 副册: 1, 又副册: 2, 无: 9 };
+const zheng = characters.filter((c) => c.rank === '正册');
+const others = characters.filter((c) => c.rank !== '正册');
+const families = [...new Set(characters.map((c) => c.family).filter(Boolean))];
+const ranks = [...new Set(characters.map((c) => c.rank).filter(Boolean))].sort((a, b) => (RANK_ORDER[a] ?? 5) - (RANK_ORDER[b] ?? 5));
+const arr = (v) => (Array.isArray(v) ? v.join('、') : v || '');
+const toArr = (v) => (Array.isArray(v) ? v : v ? [v] : []);
+const homes = [...new Set(characters.flatMap((c) => toArr(c.home)))].filter(Boolean);
+---
+
+<Base title="人物" description="红楼梦人物 —— 金陵十二钗判词命运与九十五位群像，大图画廊，按家族、册次、居所浏览。">
+  <div class="wrap">
+    <header class="phead" data-reveal>
+      <span class="seal seal--lg">人物</span>
+      <h1>金陵群芳</h1>
+      <p class="tagline">{characters.length} 位人物 · 十二钗判词命运 · 四大家族群像</p>
+    </header>
+
+    <!-- 正册十二钗：大图画廊 -->
+    <section data-reveal>
+      <h2 class="sec-h">正册十二钗</h2>
+      <div class="gallery feature">
+        {zheng.map((c) => {
+          const img = imgOf(c.id);
+          return (
+            <a href={`/characters/${c.slug}`} class="pcard plain" style={`--fc:${familyColor(c.family)}`}>
+              <div class={img ? 'pimg' : 'pimg noimg'}>
+                {img ? <img src={img} alt={c.title} loading="lazy" decoding="async" /> : <span class="bigname">{c.title}</span>}
+                <span class="corner">{c.family}</span>
+              </div>
+              <div class="pinfo">
+                <span class="pname">{c.title}</span>
+                {c.verdictKw && <span class="pverse">{c.verdictKw}</span>}
+              </div>
+            </a>
+          );
+        })}
+      </div>
+    </section>
+
+    <!-- 筛选 + 全部 -->
+    <section class="filters" data-reveal aria-label="筛选">
+      <div class="frow"><span class="flabel">家族</span>{families.map((f) => <button class="chip" type="button" data-key="family" data-val={f} style={`--fc:${familyColor(f)}`}>{f}</button>)}</div>
+      <div class="frow"><span class="flabel">册次</span>{ranks.map((r) => <button class="chip" type="button" data-key="rank" data-val={r}>{r}</button>)}</div>
+      <div class="frow"><span class="flabel">居所</span>{homes.map((h) => <button class="chip" type="button" data-key="home" data-val={h}>{h}</button>)}</div>
+    </section>
+
+    <h2 class="sec-h">全部人物</h2>
+    <div class="gallery all" id="clist">
+      {characters.map((c) => {
+        const img = imgOf(c.id);
+        return (
+          <a href={`/characters/${c.slug}`} class="pcard sm plain" data-card data-family={c.family || ''} data-rank={c.rank || ''} data-home={arr(c.home)} style={`--fc:${familyColor(c.family)}`}>
+            <div class={img ? 'pimg' : 'pimg noimg'}>
+              {img ? <img src={img} alt={c.title} loading="lazy" decoding="async" /> : <span class="bigname sm">{c.title}</span>}
+            </div>
+            <div class="pinfo">
+              <span class="pname">{c.title}</span>
+              <span class="psub">{[arr(c.role), arr(c.home)].filter(Boolean).join(' · ')}</span>
+            </div>
+          </a>
+        );
+      })}
+    </div>
+    <p class="count" id="count" aria-live="polite"></p>
+  </div>
+
+  <script is:inline>
+    (() => {
+      const active = { family: '', rank: '', home: '' };
+      const chips = [...document.querySelectorAll('.chip')];
+      const cards = [...document.querySelectorAll('[data-card]')];
+      const countEl = document.getElementById('count');
+      const update = () => {
+        let n = 0;
+        cards.forEach((c) => {
+          const ok = (!active.family || c.dataset.family === active.family)
+            && (!active.rank || c.dataset.rank === active.rank)
+            && (!active.home || (c.dataset.home || '').split('、').includes(active.home));
+          c.style.display = ok ? '' : 'none'; if (ok) n++;
+        });
+        chips.forEach((b) => b.classList.toggle('on', active[b.dataset.key] === b.dataset.val));
+        countEl.textContent = active.family || active.rank || active.home ? `符合：${n} 人` : '';
+      };
+      chips.forEach((b) => b.addEventListener('click', () => { const k = b.dataset.key; active[k] = active[k] === b.dataset.val ? '' : b.dataset.val; update(); }));
+    })();
+  </script>
+
+  <style>
+    .phead { text-align: center; margin-bottom: 2.8rem; }
+    .phead h1 { font-size: clamp(2.2rem, 1.6rem + 3vw, 3.4rem); margin-top: .8rem; }
+    .tagline { color: var(--ink-faint); margin-top: .6rem; letter-spacing: .05em; }
+    .sec-h { font-size: 1.5rem; border-bottom: 1px solid var(--ink-hair); padding-bottom: .7rem; margin-bottom: 1.6rem; position: relative; }
+    .sec-h::before { content: ""; position: absolute; left: 0; bottom: -1px; width: 2.6rem; height: 2px; background: var(--jade); }
+
+    .gallery { display: grid; gap: 1.1rem; margin-bottom: 3rem; }
+    .gallery.feature { grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); }
+    .gallery.all { grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); gap: .9rem; }
+
+    .pcard { display: flex; flex-direction: column; background: var(--paper-2); border: 1px solid var(--ink-hair); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); transition: transform var(--speed) var(--ease), box-shadow var(--speed) var(--ease), border-color var(--speed) var(--ease); }
+    .pcard:hover { transform: translateY(-5px); box-shadow: var(--shadow); border-color: color-mix(in srgb, var(--jade) 50%, var(--ink-hair)); }
+    .pimg { position: relative; aspect-ratio: 3 / 4; overflow: hidden; background: var(--paper-sunk); }
+    .pimg img { width: 100%; height: 100%; object-fit: cover; filter: saturate(.96); transition: transform .6s var(--ease); }
+    .pcard:hover .pimg img { transform: scale(1.06); }
+    .pimg.noimg { display: flex; align-items: center; justify-content: center; background: linear-gradient(150deg, var(--jade-deep), color-mix(in srgb, var(--fc, var(--jade)) 70%, var(--jade-deep))); }
+    .bigname { color: #fff; font-size: 2rem; font-weight: 700; letter-spacing: .1em; writing-mode: vertical-rl; opacity: .92; }
+    .bigname.sm { font-size: 1.4rem; }
+    .corner { position: absolute; top: .5rem; left: .5rem; font-size: .7rem; color: #fff; background: color-mix(in srgb, var(--jade-deep) 75%, transparent); padding: .1em .5em; border-radius: 2px; letter-spacing: .08em; backdrop-filter: blur(2px); }
+    .pinfo { padding: .7rem .85rem .85rem; display: flex; flex-direction: column; gap: .15rem; }
+    .pname { font-size: 1.2rem; font-weight: 700; color: var(--ink); }
+    .pcard.sm .pname { font-size: 1.05rem; }
+    .pverse { font-size: .8rem; color: var(--gold); font-style: italic; letter-spacing: .03em; line-height: 1.5; }
+    .psub { font-size: .76rem; color: var(--ink-faint); line-height: 1.4; }
+
+    .filters { display: grid; gap: .7rem; margin: 1rem 0 2rem; }
+    .frow { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+    .flabel { font-size: .85rem; color: var(--ink-faint); margin-right: .3rem; min-width: 2.4em; }
+    .chip { font-family: var(--serif); font-size: .88rem; padding: .24em .9em; border: 1px solid var(--ink-hair); background: var(--paper-2); color: var(--ink-2); border-radius: 999px; cursor: pointer; transition: all var(--speed) var(--ease); }
+    .chip:hover { border-color: var(--fc, var(--jade)); color: var(--fc, var(--jade)); }
+    .chip.on { background: var(--fc, var(--jade)); border-color: var(--fc, var(--jade)); color: #fff; }
+    .count { text-align: center; color: var(--ink-faint); margin-top: 1.4rem; min-height: 1.2em; }
+  </style>
+</Base>

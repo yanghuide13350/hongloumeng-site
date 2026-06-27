@@ -1,0 +1,34 @@
+{
+	"nodes":[
+		{"id":"1","type":"file","file":"书籍/红楼梦知识库/红楼梦 索引.md","x":0,"y":0,"width":300,"height":180},
+		{"id":"2","type":"file","file":"书籍/红楼梦知识库/知识库/导航/红楼梦 导航.md","x":340,"y":0,"width":320,"height":180},
+		{"id":"3","type":"file","file":"书籍/红楼梦知识库/知识库/人物/人物 - 贾宝玉.md","x":0,"y":260,"width":280,"height":180},
+		{"id":"4","type":"file","file":"书籍/红楼梦知识库/知识库/人物/人物 - 林黛玉.md","x":320,"y":260,"width":280,"height":180},
+		{"id":"5","type":"file","file":"书籍/红楼梦知识库/知识库/人物/人物 - 薛宝钗.md","x":640,"y":260,"width":280,"height":180},
+		{"id":"6","type":"file","file":"书籍/红楼梦知识库/知识库/诗词/全书诗词总表.md","x":0,"y":520,"width":320,"height":180},
+		{"id":"7","type":"file","file":"书籍/红楼梦知识库/知识库/诗词/判词总表.md","x":360,"y":520,"width":320,"height":180},
+		{"id":"8","type":"file","file":"书籍/红楼梦知识库/知识库/图表/图表 - 贾史王薛四大家族关系.md","x":720,"y":520,"width":360,"height":180},
+		{"id":"9","type":"file","file":"书籍/红楼梦知识库/知识库/图表/图表 - 宝黛钗关系.md","x":720,"y":760,"width":360,"height":180},
+		{"id":"10","type":"file","file":"书籍/红楼梦知识库/知识库/图表/图表 - 判词与人物映射.md","x":360,"y":760,"width":360,"height":180}
+	],
+	"edges":[
+		{"id":"e1","fromNode":"1","fromSide":"right","toNode":"2","toSide":"left","color":"2"},
+		{"id":"e2","fromNode":"2","fromSide":"bottom","toNode":"3","toSide":"top","color":"4"},
+		{"id":"e3","fromNode":"2","fromSide":"bottom","toNode":"4","toSide":"top","color":"4"},
+		{"id":"e4","fromNode":"2","fromSide":"bottom","toNode":"5","toSide":"top","color":"4"},
+		{"id":"e5","fromNode":"3","fromSide":"bottom","toNode":"6","toSide":"top","color":"3"},
+		{"id":"e6","fromNode":"4","fromSide":"bottom","toNode":"6","toSide":"top","color":"3"},
+		{"id":"e7","fromNode":"5","fromSide":"left","toNode":"6","toSide":"right","color":"3"},
+		{"id":"e8","fromNode":"4","fromSide":"bottom","toNode":"7","toSide":"top","color":"6"},
+		{"id":"e9","fromNode":"5","fromSide":"bottom","toNode":"7","toSide":"top","color":"6"},
+		{"id":"e10","fromNode":"7","fromSide":"bottom","toNode":"10","toSide":"top","color":"6"},
+		{"id":"e11","fromNode":"3","fromSide":"bottom","toNode":"9","toSide":"top","color":"5"},
+		{"id":"e12","fromNode":"4","fromSide":"bottom","toNode":"9","toSide":"top","color":"5"},
+		{"id":"e13","fromNode":"5","fromSide":"bottom","toNode":"9","toSide":"top","color":"5"},
+		{"id":"e14","fromNode":"2","fromSide":"bottom","toNode":"8","toSide":"top","color":"2"}
+	],
+	"metadata":{
+		"version":"1.0-1.0",
+		"frontmatter":{}
+	}
+}

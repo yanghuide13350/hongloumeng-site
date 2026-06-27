@@ -1,0 +1,69 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const { title, description, wide = false, noindex = false } = Astro.props;
+const fullTitle = title ? `${title} · 红楼梦知识库` : '红楼梦知识库 · 水墨';
+const desc = description ?? '红楼梦知识库 —— 人物关系网络、判词命运线、诗词鉴赏与百二十回脉络。水墨留白，宋式美学。';
+const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://hongloumeng.example').href;
+---
+
+<!doctype html>
+<html lang="zh-Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={desc} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={desc} />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="/印章.png" type="image/png" />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta property="og:url" content={canonical} />
+    <!-- 防暗色闪烁 -->
+    <script is:inline>
+      (() => {
+        document.documentElement.classList.add('has-js');
+        const t = localStorage.getItem('hlm-theme');
+        if (t === 'dark' || (!t && matchMedia('(prefers-color-scheme: dark)').matches))
+          document.documentElement.dataset.theme = 'dark';
+      })();
+    </script>
+    <!-- 字体：直接使用系统宋体/黑体栈（见 global.css --serif/--sans），不依赖外网 webfont，
+         国内访问无阻塞；如需自托管 Noto，可放 public/fonts 并在此 @font-face 引入。 -->
+  </head>
+  <body>
+    <Header />
+    <main class={wide ? 'site-main wide' : 'site-main'}>
+      <slot />
+    </main>
+    <Footer />
+
+    <style>
+      .site-main { padding-block: calc(4rem + clamp(1.6rem, 4vw, 3rem)) clamp(3rem, 8vw, 6rem); min-height: 60vh; }
+    </style>
+
+    <script>
+      // 滚动渐显
+      const io = new IntersectionObserver(
+        (entries) => entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }),
+        { rootMargin: '0px 0px -8% 0px', threshold: 0.05 }
+      );
+      document.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
+
+      // 明暗切换
+      const btn = document.getElementById('theme-toggle');
+      const sync = () => { if (btn) btn.textContent = document.documentElement.dataset.theme === 'dark' ? '☀' : '☾'; };
+      sync();
+      btn?.addEventListener('click', () => {
+        const dark = document.documentElement.dataset.theme === 'dark';
+        if (dark) { delete document.documentElement.dataset.theme; localStorage.setItem('hlm-theme', 'light'); }
+        else { document.documentElement.dataset.theme = 'dark'; localStorage.setItem('hlm-theme', 'dark'); }
+        sync();
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,68 @@
+---
+import Base from '../../layouts/Base.astro';
+import { chaptersData } from '../../lib/data.js';
+
+const { chapters, groups } = chaptersData;
+const byNo = new Map(chapters.map((c) => [c.no, c]));
+const vols = [
+  { name: '开卷', sub: '第一至四十回', range: [1, 40] },
+  { name: '鼎盛', sub: '第四十一至八十回', range: [41, 80] },
+  { name: '收束', sub: '第八十一至百二十回', range: [81, 120] },
+];
+const cleanGroup = (t) => t.replace(/章节总览/g, '').trim() || t;
+---
+
+<Base title="章节" description="红楼梦百二十回脉络 —— 分组总览到单回精读的完整时间线。">
+  <div class="wrap">
+    <header class="phead" data-reveal>
+      <span class="seal seal--lg">章节</span>
+      <h1>百二十回</h1>
+      <p class="tagline">{chapters.length} 回 · {groups.length} 组总览 · 一条完整时间线</p>
+    </header>
+
+    <section data-reveal>
+      <h2 class="sec-h">分组总览</h2>
+      <div class="ggrid">
+        {groups.map((g) => <a href={`/chapters/${g.slug}`} class="card plain gcard">{cleanGroup(g.title)}</a>)}
+      </div>
+    </section>
+
+    <section class="timeline" data-reveal>
+      <h2 class="sec-h">回目时间线</h2>
+      {vols.map((v) => (
+        <div class="vol">
+          <div class="vol-h"><span class="vn">{v.name}</span><span class="vs">{v.sub}</span></div>
+          <div class="cells">
+            {Array.from({ length: v.range[1] - v.range[0] + 1 }, (_, i) => v.range[0] + i).map((no) => {
+              const c = byNo.get(no);
+              return c
+                ? <a href={`/chapters/${c.slug}`} class="cell plain" title={c.title}><span class="no">{no}</span></a>
+                : <span class="cell empty"><span class="no">{no}</span></span>;
+            })}
+          </div>
+        </div>
+      ))}
+    </section>
+  </div>
+
+  <style>
+    .phead { text-align: center; margin-bottom: 2.6rem; }
+    .phead h1 { font-size: clamp(2.2rem, 1.6rem + 3vw, 3.4rem); margin-top: .8rem; }
+    .tagline { color: var(--ink-faint); margin-top: .6rem; letter-spacing: .05em; }
+    .sec-h { font-size: 1.4rem; border-bottom: 1px solid var(--ink-hair); padding-bottom: .7rem; margin-bottom: 1.4rem; position: relative; }
+    .sec-h::before { content: ""; position: absolute; left: 0; bottom: -1px; width: 2.6rem; height: 2px; background: var(--cinnabar); }
+    .ggrid { display: grid; gap: .7rem; grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr)); margin-bottom: 3rem; }
+    .gcard { text-align: center; padding: 1rem .6rem; font-size: 1.05rem; font-weight: 500; }
+    .vol { margin-bottom: 2.4rem; }
+    .vol-h { display: flex; align-items: baseline; gap: .7rem; margin-bottom: .9rem; }
+    .vn { font-size: 1.25rem; font-weight: 700; color: var(--cinnabar); letter-spacing: .1em; }
+    .vs { font-size: .85rem; color: var(--ink-faint); }
+    .cells { display: grid; grid-template-columns: repeat(auto-fill, minmax(2.8rem, 1fr)); gap: .4rem; }
+    .cell { display: flex; align-items: center; justify-content: center; aspect-ratio: 1; background: var(--paper-2); border: 1px solid var(--ink-hair); border-radius: var(--radius); transition: all var(--speed) var(--ease); }
+    .cell .no { font-size: .95rem; color: var(--ink-2); }
+    .cell:not(.empty):hover { background: var(--cinnabar); border-color: var(--cinnabar); transform: scale(1.12); z-index: 1; }
+    .cell:not(.empty):hover .no { color: #fff; }
+    .cell.empty { opacity: .4; }
+    @media (max-width: 560px) { .cells { grid-template-columns: repeat(auto-fill, minmax(2.3rem, 1fr)); } }
+  </style>
+</Base>

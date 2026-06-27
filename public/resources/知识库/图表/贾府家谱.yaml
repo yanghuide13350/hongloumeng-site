@@ -1,0 +1,111 @@
+# 贾府家谱数据文件
+# 历史家谱数据草稿；当前正式图谱见「贾府家谱图谱.md」中的 Mermaid 图
+
+root: 贾源
+layout: vertical
+
+nodes:
+  # 始祖
+  - id: 贾源
+    name: 贾源（始祖）
+    children: [贾演, 贾齐]
+
+  # ========== 宁国府一支 ==========
+  - id: 贾演
+    name: 贾演（宁国公）
+    children: [贾代化]
+
+  - id: 贾代化
+    name: 贾代化
+    children: [贾敬]
+
+  - id: 贾敬
+    name: 贾敬（修道）
+    children: [贾珍, 惜春]
+
+  - id: 贾珍
+    name: 贾珍（宁国府当家）
+    spouse: 尤氏
+    children: [贾蓉]
+
+  - id: 尤氏
+    name: 尤氏（继室）
+
+  - id: 贾蓉
+    name: 贾蓉
+    spouse: 秦可卿
+
+  - id: 秦可卿
+    name: 秦可卿（病逝）
+
+  - id: 惜春
+    name: 惜春（四小姐，为尼）
+
+  # ========== 荣国府一支 ==========
+  - id: 贾齐
+    name: 贾齐（荣国公）
+    children: [贾代善]
+
+  - id: 贾代善
+    name: 贾代善
+    spouse: 贾母
+    children: [贾赦, 贾政]
+
+  - id: 贾母
+    name: 贾母（史太君）
+
+  # 贾赦一支
+  - id: 贾赦
+    name: 贾赦（长子）
+    spouse: 邢夫人
+    children: [贾琏, 迎春]
+
+  - id: 邢夫人
+    name: 邢夫人
+
+  - id: 贾琏
+    name: 贾琏
+    spouse: 王熙凤
+    children: [巧姐]
+
+  - id: 王熙凤
+    name: 王熙凤（总管）
+
+  - id: 巧姐
+    name: 巧姐（得救）
+
+  - id: 迎春
+    name: 迎春（二小姐，误嫁惨死）
+
+  # 贾政一支
+  - id: 贾政
+    name: 贾政（次子）
+    spouse: 王夫人
+    children: [元春, 贾珠, 贾宝玉, 探春]
+
+  - id: 王夫人
+    name: 王夫人
+
+  - id: 元春
+    name: 元春（贤德妃，暴亡）
+
+  - id: 贾珠
+    name: 贾珠（早逝）
+    spouse: 李纨
+    children: [贾兰]
+
+  - id: 李纨
+    name: 李纨（寡妇，晚荣早逝）
+
+  - id: 贾兰
+    name: 贾兰（中举）
+
+  - id: 贾宝玉
+    name: 贾宝玉（中举后出家）
+    spouse: 薛宝钗
+
+  - id: 薛宝钗
+    name: 薛宝钗（守寡）
+
+  - id: 探春
+    name: 探春（三小姐，远嫁）

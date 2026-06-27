@@ -1,0 +1,255 @@
+---
+import Base from '../../layouts/Base.astro';
+import RelatedGraph from '../../components/RelatedGraph.astro';
+import CharacterCards from '../../components/CharacterCards.astro';
+import { pages, characters, TYPE_LABEL } from '../../lib/data.js';
+
+export function getStaticPaths() {
+  return pages.map((p) => ({ params: { type: p.typeRoute, slug: p.slug }, props: { page: p } }));
+}
+
+const { page } = Astro.props;
+// 检测是否为人物卡片墙页面
+const isCharCardWall = page.id === '人物卡片墙' || page.title === '人物卡片墙';
+const fm = page.frontmatter || {};
+
+const META = ['册次', '家族', '身份', '居所', '首次出现回', '结局', '判词关键词',
+  '所属', '主人', '题额', '定名', '诗词类型', '归属人物', '出现章节', '关联场景',
+  '持有者', '象征', '校对状态'];
+const metaRows = META
+  .filter((k) => fm[k] != null && fm[k] !== '' && !(Array.isArray(fm[k]) && fm[k].length === 0))
+  .map((k) => [k, Array.isArray(fm[k]) ? fm[k].join('、') : String(fm[k])]);
+
+const tags = Array.isArray(fm['标签']) ? fm['标签'] : fm['标签'] ? [fm['标签']] : [];
+const toc = page.sections.filter((s) => s.level === 2);
+const firstText = (() => {
+  for (const m of page.html.matchAll(/<p>([\s\S]*?)<\/p>/g)) {
+    const t = m[1].replace(/<[^>]+>/g, '').trim();
+    if (t) return t;
+  }
+  return '';
+})();
+const excerpt = firstText.slice(0, 90);
+const label = TYPE_LABEL[page.typeRoute] || '词条';
+const cover = page.cover;
+---
+
+<Base title={page.title} description={excerpt || page.title} wide>
+  <article class="wrap detail">
+    <nav class="crumb" aria-label="面包屑">
+      <a href="/" class="plain">首页</a><span>›</span>
+      <a href={`/${page.typeRoute}`} class="plain">{label}</a><span>›</span>
+      <span class="cur">{page.title}</span>
+    </nav>
+
+    {cover ? (
+      <header class="head head--cover" data-reveal>
+        <figure class="portrait" data-tilt>
+          <div class="p-frame">
+            <img class="p-media" src={cover} alt={page.title} loading="eager" />
+            <span class="p-glow" aria-hidden="true"></span>
+            <span class="p-sheen" aria-hidden="true"></span>
+          </div>
+          <span class="p-seal">{label}</span>
+        </figure>
+        <div class="head-meta">
+          <h1>{page.title}</h1>
+          {excerpt && <p class="lead-line">{excerpt}</p>}
+          {metaRows.length > 0 && (
+            <dl class="infocard">
+              {metaRows.map(([k, v]) => <div class="cell"><dt>{k}</dt><dd>{v}</dd></div>)}
+            </dl>
+          )}
+        </div>
+      </header>
+    ) : (
+      <header class="head" data-reveal>
+        <div class="title-row">
+          <h1>{page.title}</h1>
+          <span class="seal seal--lg">{label}</span>
+        </div>
+        {metaRows.length > 0 && (
+          <dl class="infocard">
+            {metaRows.map(([k, v]) => <div class="cell"><dt>{k}</dt><dd>{v}</dd></div>)}
+          </dl>
+        )}
+      </header>
+    )}
+
+    <div class="layout">
+      <div class="content prose">
+        {isCharCardWall ? (
+          <>
+            {/* 人物卡片墙：显示说明文字，然后注入卡片组件 */}
+            <div set:html={page.html.split('<h2')[0]}></div>
+
+            <h2 id="金陵十二钗--宝玉">金陵十二钗 + 宝玉</h2>
+            <CharacterCards filter={(c) => c.rank === '正册' || c.title === '贾宝玉'} />
+
+            <hr />
+
+            <h2 id="丫鬟仆从">丫鬟仆从</h2>
+            <CharacterCards filter={(c) => ['丫鬟', '大丫鬟', '通房大丫鬟', '陪房', '小戏子', '小丫鬟'].includes(c.role)} />
+
+            <hr />
+
+            <h2 id="按结局分组看板模式">按结局分组（看板模式）</h2>
+            {(() => {
+              // 按结局分组
+              const byFate = {};
+              characters.filter(c => c.fate).forEach(c => {
+                const fateKey = Array.isArray(c.fate) ? c.fate[0] : c.fate;
+                if (!byFate[fateKey]) byFate[fateKey] = [];
+                byFate[fateKey].push(c);
+              });
+              return Object.entries(byFate).sort((a, b) => b[1].length - a[1].length).map(([fate, chars]) => (
+                <>
+                  <h3 class="fate-group-title">{fate}</h3>
+                  <CharacterCards filter={(c) => chars.some(ch => ch.id === c.id)} />
+                </>
+              ));
+            })()}
+
+            <hr />
+
+            <h2 id="相关页面">相关页面</h2>
+            <div set:html={page.html.split('<h2 id="相关页面">相关页面</h2>')[1]}></div>
+          </>
+        ) : (
+          <div set:html={page.html}></div>
+        )}
+      </div>
+      <aside class="side">
+        {toc.length > 0 && (
+          <nav class="toc" aria-label="本页目录">
+            <p class="side-h">本页目录</p>
+            <ul>{toc.map((s) => <li><a href={`#${s.id}`} class="plain">{s.text}</a></li>)}</ul>
+          </nav>
+        )}
+        <div class="side-block"><RelatedGraph id={page.id} title={page.title} /></div>
+        {tags.length > 0 && (
+          <div class="side-block tags">
+            <p class="side-h">标签</p>
+            <div class="tagwrap">{tags.map((t) => <span class="tag">{t}</span>)}</div>
+          </div>
+        )}
+      </aside>
+    </div>
+  </article>
+</Base>
+
+<style>
+  .crumb { display: flex; gap: .5rem; align-items: center; font-size: .85rem; color: var(--ink-faint); margin-bottom: 1.6rem; flex-wrap: wrap; }
+  .crumb .cur { color: var(--ink-2); }
+
+  /* 藏品式大图头 */
+  .head--cover { display: grid; grid-template-columns: minmax(220px, 300px) 1fr; gap: clamp(1.6rem, 4vw, 3rem); align-items: start; margin-bottom: 1rem; }
+  .portrait { margin: 0; position: relative; }
+  .p-frame { position: relative; overflow: hidden; aspect-ratio: 3 / 4; border-radius: var(--radius); box-shadow: var(--shadow); isolation: isolate; }
+  .p-media { width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.12); transform-origin: 50% 42%; will-change: transform; }
+  /* 朱砂暖光自下而上漫染，与首页 Hero 呼应 */
+  .p-glow {
+    position: absolute; inset: 0; pointer-events: none; z-index: 1;
+    background:
+      radial-gradient(120% 55% at 50% 116%, color-mix(in srgb, var(--cinnabar) 24%, transparent), transparent 60%),
+      linear-gradient(to top, color-mix(in srgb, var(--ink) 22%, transparent), transparent 44%);
+    mix-blend-mode: multiply; opacity: .65;
+  }
+  [data-theme="dark"] .p-glow { mix-blend-mode: screen; opacity: .45; }
+  /* 随鼠标移动的高光，强化 3D 质感（默认隐形，由 JS 注入 --mx/--my） */
+  .p-sheen {
+    position: absolute; inset: 0; pointer-events: none; z-index: 2; opacity: 0;
+    background: radial-gradient(28% 22% at var(--mx, 50%) var(--my, 30%), rgba(255,255,255,.34), transparent 70%);
+    transition: opacity var(--speed) var(--ease);
+  }
+  .portrait.tilting .p-sheen { opacity: 1; }
+  .p-seal { position: absolute; top: .7rem; left: .7rem; z-index: 3; background: var(--cinnabar); color: #fff; font-size: .72rem; padding: .18em .55em; border-radius: 2px; letter-spacing: .14em; }
+
+  /* —— 鼠标 3D tilt —— */
+  [data-tilt] { transform: perspective(1100px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transform-style: preserve-3d; transition: transform .5s var(--ease); will-change: transform; }
+  [data-tilt].tilting { transition: transform .12s linear; }
+
+  /* —— 滚动驱动视差（Apple 风格，渐进增强）：大图随滚动缓慢平移 —— */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .p-media { animation: portraitPan linear both; animation-timeline: view(); animation-range: cover; }
+    }
+  }
+  @keyframes portraitPan {
+    from { transform: translateY(-4.5%) scale(1.12); }
+    to   { transform: translateY(4.5%) scale(1.12); }
+  }
+  .head-meta h1 { font-size: clamp(2.2rem, 1.6rem + 2.4vw, 3.2rem); }
+  .lead-line { margin-top: .9rem; color: var(--ink-2); line-height: 1.9; font-size: 1.05rem; }
+
+  .head { margin-bottom: 1rem; }
+  .title-row { display: flex; align-items: center; gap: .9rem; flex-wrap: wrap; }
+  .title-row h1 { font-size: clamp(2rem, 1.5rem + 2.4vw, 3.2rem); }
+
+  .infocard { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: .1rem 1.6rem; margin-top: 1.4rem; padding: 1.1rem 1.3rem; background: var(--paper-2); border: 1px solid var(--ink-hair); border-left: 3px solid var(--jade); border-radius: var(--radius); }
+  .cell { display: flex; gap: .6rem; padding: .3rem 0; align-items: baseline; }
+  .cell dt { color: var(--ink-faint); font-size: .85rem; white-space: nowrap; min-width: 4em; }
+  .cell dd { color: var(--ink); font-size: .95rem; }
+
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 17rem; gap: 3rem; margin-top: 2.4rem; align-items: start; }
+  .content { max-width: var(--measure); }
+  .side { position: sticky; top: 5.4rem; display: grid; gap: 1.8rem; }
+  .side-h { font-size: .82rem; letter-spacing: .14em; color: var(--jade); margin-bottom: .6rem; font-weight: 700; }
+  .toc ul { list-style: none; padding: 0; display: grid; gap: .15rem; border-left: 1px solid var(--ink-hair); }
+  .toc li a { display: block; padding: .25rem .9rem; color: var(--ink-2); font-size: .9rem; border-left: 2px solid transparent; margin-left: -1px; transition: all var(--speed) var(--ease); }
+  .toc li a:hover { color: var(--jade); border-left-color: var(--jade); }
+  .tagwrap { display: flex; flex-wrap: wrap; gap: .4rem; }
+
+  @media (max-width: 900px) {
+    .head--cover { grid-template-columns: 1fr; }
+    .portrait { max-width: 18rem; }
+    .layout { grid-template-columns: 1fr; gap: 2rem; }
+    .side { position: static; }
+    .content { max-width: none; }
+  }
+
+  /* 人物卡片墙 - 结局分组标题 */
+  .fate-group-title {
+    font-family: var(--serif);
+    font-size: 1.2rem;
+    color: var(--cinnabar);
+    margin: 2rem 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--ink-hair);
+  }
+</style>
+
+<script>
+  // 人物大图：鼠标 3D tilt + 高光视差（与首页 Hero 同源），仅在精细指针、非减弱动效时启用。
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
+  if (!reduce && fine) {
+    document.querySelectorAll('.portrait[data-tilt]').forEach((el) => {
+      const media = el.querySelector('.p-media');
+      const MAX = 6;
+      let raf = 0;
+      const onMove = (e) => {
+        const r = el.getBoundingClientRect();
+        const px = (e.clientX - r.left) / r.width - 0.5;
+        const py = (e.clientY - r.top) / r.height - 0.5;
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(() => {
+          el.style.setProperty('--ry', (px * MAX).toFixed(2) + 'deg');
+          el.style.setProperty('--rx', (-py * MAX).toFixed(2) + 'deg');
+          el.style.setProperty('--mx', ((px + 0.5) * 100).toFixed(1) + '%');
+          el.style.setProperty('--my', ((py + 0.5) * 100).toFixed(1) + '%');
+          // 图层做轻微反向位移，营造纵深视差
+          if (media) media.style.translate = `${(-px * 10).toFixed(1)}px ${(-py * 10).toFixed(1)}px`;
+        });
+      };
+      el.addEventListener('mouseenter', () => el.classList.add('tilting'));
+      el.addEventListener('mousemove', onMove);
+      el.addEventListener('mouseleave', () => {
+        el.classList.remove('tilting');
+        el.style.setProperty('--rx', '0deg');
+        el.style.setProperty('--ry', '0deg');
+        if (media) media.style.translate = '0px 0px';
+      });
+    });
+  }
+</script>

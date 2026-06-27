@@ -1,0 +1,41 @@
+---
+import Base from '../layouts/Base.astro';
+import { TYPE_ORDER, TYPE_LABEL, TYPE_TAGLINE } from '../lib/data.js';
+---
+
+<Base title="页面未寻得" description="此页不存在，或已迁移。" noindex>
+  <section class="wrap nf">
+    <span class="seal seal--lg">迷津</span>
+    <h1>满纸荒唐，此页难寻</h1>
+    <p class="nf-sub">你要找的页面不在此处——或许它从未存在，或许已随诸芳流散。不妨从下列门径重新入园。</p>
+    <p class="nf-act">
+      <a href="/" class="btn">返回首页</a>
+      <a href="/search" class="btn ghost">搜索词条</a>
+      <a href="/graph" class="btn ghost">人物关系网</a>
+    </p>
+    <nav class="nf-grid" aria-label="分类导航">
+      {TYPE_ORDER.map((r) => (
+        <a class="nf-cell plain" href={`/${r}`}>
+          <span class="nf-t">{TYPE_LABEL[r]}</span>
+          <span class="nf-d">{TYPE_TAGLINE[r]}</span>
+        </a>
+      ))}
+    </nav>
+  </section>
+</Base>
+
+<style>
+  .nf { text-align: center; padding-block: clamp(2rem, 6vw, 5rem); }
+  .nf h1 { font-size: clamp(2rem, 1.4rem + 2.6vw, 3rem); margin-top: .8rem; }
+  .nf-sub { color: var(--ink-2); max-width: 34rem; margin: 1rem auto 0; line-height: 1.9; }
+  .nf-act { display: flex; gap: .8rem; justify-content: center; flex-wrap: wrap; margin: 1.8rem 0 2.6rem; }
+  .btn { display: inline-block; padding: .55rem 1.3rem; border-radius: var(--radius); background: var(--jade); color: #fff; font-size: .95rem; transition: background var(--speed) var(--ease); }
+  .btn:hover { background: var(--jade-br); }
+  .btn.ghost { background: transparent; color: var(--jade); border: 1px solid var(--ink-hair); }
+  .btn.ghost:hover { border-color: var(--jade); }
+  .nf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: .8rem; max-width: 46rem; margin: 0 auto; }
+  .nf-cell { display: grid; gap: .2rem; padding: .9rem 1rem; background: var(--paper-2); border: 1px solid var(--ink-hair); border-left: 3px solid var(--jade); border-radius: var(--radius); text-align: left; transition: transform var(--speed) var(--ease), box-shadow var(--speed) var(--ease); }
+  .nf-cell:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+  .nf-t { font-weight: 700; color: var(--ink); }
+  .nf-d { font-size: .8rem; color: var(--ink-faint); }
+</style>

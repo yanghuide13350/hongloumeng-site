@@ -1,0 +1,74 @@
+---
+import Base from '../../layouts/Base.astro';
+import { entriesByRoute, toolsByRoute, TYPE_LABEL, TYPE_TAGLINE, urlOf } from '../../lib/data.js';
+
+// 通用列表（characters / poems / chapters 有定制列表，此处排除）
+export function getStaticPaths() {
+  const LIST_ROUTES = ['themes', 'clues', 'places', 'events', 'objects', 'folklore', 'charts', 'guide'];
+  return LIST_ROUTES.map((r) => ({ params: { type: r } }));
+}
+const { type } = Astro.params;
+const entries = entriesByRoute(type);
+const tools = toolsByRoute(type);
+const label = TYPE_LABEL[type] || '词条';
+const tagline = TYPE_TAGLINE[type] || '';
+
+const firstText = (html) => {
+  for (const m of html.matchAll(/<p>([\s\S]*?)<\/p>/g)) {
+    const t = m[1].replace(/<[^>]+>/g, '').trim();
+    if (t) return t;
+  }
+  return '';
+};
+const metaOf = (p) => {
+  const f = p.frontmatter || {};
+  return ['家族', '身份', '所属', '主人', '诗词类型', '归属人物', '持有者', '册次']
+    .map((k) => f[k]).filter(Boolean).map((v) => (Array.isArray(v) ? v.join('、') : v));
+};
+---
+
+<Base title={label} description={`红楼梦${label} —— ${tagline}`}>
+  <div class="wrap">
+    <header class="phead" data-reveal>
+      <span class="seal seal--lg">{label}</span>
+      <h1>{label}</h1>
+      <p class="tagline">{tagline}{tagline && ' · '}{entries.length} 个词条</p>
+    </header>
+
+    <ul class="grid">
+      {entries.map((p) => (
+        <li data-reveal>
+          <a href={urlOf(p)} class="card plain">
+            <h2 class="t">{p.title}</h2>
+            {metaOf(p).length > 0 && <p class="m">{metaOf(p).slice(0, 3).join(' · ')}</p>}
+            <p class="ex">{firstText(p.html).slice(0, 72)}</p>
+          </a>
+        </li>
+      ))}
+    </ul>
+
+    {tools.length > 0 && (
+      <>
+        <hr class="rule" />
+        <p class="side-h">总表 · 索引 · 工具</p>
+        <ul class="toolgrid">
+          {tools.map((p) => <li><a href={urlOf(p)} class="tag">{p.title}</a></li>)}
+        </ul>
+      </>
+    )}
+  </div>
+</Base>
+
+<style>
+  .phead { text-align: center; margin-bottom: 2.6rem; }
+  .phead h1 { font-size: clamp(2.2rem, 1.6rem + 3vw, 3.4rem); margin-top: .8rem; }
+  .tagline { color: var(--ink-faint); margin-top: .6rem; letter-spacing: .06em; }
+  .grid { list-style: none; padding: 0; display: grid; gap: 1.1rem; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); }
+  .card { display: block; height: 100%; }
+  .card .t { font-size: 1.3rem; }
+  .card .m { color: var(--cinnabar); font-size: .85rem; margin-top: .4rem; }
+  .card .ex { color: var(--ink-2); font-size: .92rem; margin-top: .6rem; line-height: 1.7; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .side-h { font-size: .82rem; letter-spacing: .14em; color: var(--cinnabar); font-weight: 700; margin-bottom: 1rem; }
+  .toolgrid { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: .6rem; }
+  .toolgrid .tag { font-size: .92rem; padding: .3em 1em; }
+</style>

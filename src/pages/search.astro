@@ -1,0 +1,222 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="检索" description="在红楼梦知识库中检索人物、诗词、判词、事件、地点、器物、民俗与章节。">
+  <div class="measure search-page">
+    <header class="shead" data-reveal>
+      <span class="seal seal--lg">检索</span>
+      <h1>全库检索</h1>
+      <p class="hint">人物 · 诗词 · 判词 · 章节 · 事件 · 地点 · 器物 · 民俗 —— 输入关键词即时检索全库 404 词条。</p>
+    </header>
+
+    <div class="sbox" role="search">
+      <span class="sicon" aria-hidden="true">⌕</span>
+      <input id="q" type="search" autocomplete="off" spellcheck="false"
+             placeholder="输入关键词，如「葬花吟」「抄检大观园」「太虚幻境」「判词」…" aria-label="检索关键词" />
+      <button id="clear" class="sclear" type="button" aria-label="清空" hidden>✕</button>
+    </div>
+
+    <div class="facets" id="facets" aria-label="按类型筛选"></div>
+    <p class="scount" id="scount" aria-live="polite"></p>
+
+    <ul class="results" id="results"></ul>
+
+    <div class="sempty" id="sempty">
+      <p class="sempty-h">试试这些</p>
+      <div class="chips" id="suggest"></div>
+    </div>
+
+    <p class="sloading" id="sloading">正在载入检索索引…</p>
+    <noscript><p class="hint">检索需要启用 JavaScript。</p></noscript>
+  </div>
+
+  <style>
+    .search-page { padding-top: 1rem; max-width: 52rem; }
+    .shead { text-align: center; margin-bottom: 1.8rem; }
+    .shead h1 { font-size: clamp(2rem, 1.6rem + 2vw, 3rem); margin-top: .7rem; }
+    .hint { color: var(--ink-faint); margin-top: .6rem; line-height: 1.8; }
+
+    .sbox { display: flex; align-items: center; gap: .6rem; padding: .25rem .9rem;
+      background: var(--paper-2); border: 1.5px solid var(--ink-hair); border-radius: 999px;
+      transition: border-color var(--speed) var(--ease), box-shadow var(--speed) var(--ease); }
+    .sbox:focus-within { border-color: var(--cinnabar); box-shadow: 0 0 0 4px color-mix(in srgb, var(--cinnabar) 12%, transparent); }
+    .sicon { font-size: 1.4rem; color: var(--ink-faint); }
+    #q { flex: 1; border: 0; background: transparent; padding: .85rem .2rem; font-size: 1.08rem;
+      font-family: var(--serif); color: var(--ink); outline: none; }
+    #q::-webkit-search-cancel-button { display: none; }
+    .sclear { border: 0; background: transparent; cursor: pointer; color: var(--ink-faint);
+      font-size: 1rem; width: 1.8rem; height: 1.8rem; border-radius: 50%; }
+    .sclear:hover { color: var(--cinnabar); background: var(--paper-sunk); }
+
+    .facets { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1.2rem 0 .4rem; }
+    .facet { font-size: .85rem; padding: .35rem .85rem; border-radius: 999px; cursor: pointer;
+      border: 1px solid var(--ink-hair); background: var(--paper-2); color: var(--ink-2);
+      transition: all var(--speed) var(--ease); }
+    .facet:hover { border-color: color-mix(in srgb, var(--cinnabar) 45%, var(--ink-hair)); color: var(--ink); }
+    .facet.on { background: var(--cinnabar); border-color: var(--cinnabar); color: #fff; }
+    .facet .fc { opacity: .7; margin-left: .3em; font-size: .8em; }
+
+    .scount { color: var(--ink-faint); font-size: .85rem; margin: 1rem 0 .6rem; min-height: 1.2em; }
+
+    .results { list-style: none; display: grid; gap: .7rem; }
+    .ritem { border: 1px solid var(--ink-hair); border-left: 3px solid var(--fc, var(--cinnabar));
+      border-radius: var(--radius); background: var(--paper-2); transition: all var(--speed) var(--ease); }
+    .ritem.active, .ritem:hover { border-color: color-mix(in srgb, var(--cinnabar) 50%, var(--ink-hair));
+      box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+    .rlink { display: block; padding: 1rem 1.2rem; color: inherit; }
+    .rtop { display: flex; align-items: baseline; gap: .7rem; flex-wrap: wrap; }
+    .rtype { font-size: .72rem; letter-spacing: .1em; color: #fff; background: var(--fc, var(--cinnabar));
+      padding: .12em .55em; border-radius: 3px; flex: none; }
+    .rtitle { font-family: var(--serif); font-size: 1.25rem; font-weight: 700; color: var(--ink); }
+    .rsub { font-size: .78rem; color: var(--ink-faint); letter-spacing: .04em; }
+    .rex { margin-top: .45rem; font-size: .9rem; color: var(--ink-2); line-height: 1.7;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .ritem :global(mark) { background: color-mix(in srgb, var(--gold) 38%, transparent); color: inherit;
+      border-radius: 2px; padding: 0 .1em; }
+
+    .sempty { margin-top: 1.5rem; }
+    .sempty-h { color: var(--ink-faint); font-size: .85rem; margin-bottom: .7rem; }
+    .chips { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .chip { font-size: .9rem; padding: .4rem .9rem; border-radius: 999px; cursor: pointer;
+      border: 1px dashed var(--ink-hair); background: transparent; color: var(--jade);
+      font-family: var(--serif); transition: all var(--speed) var(--ease); }
+    .chip:hover { border-style: solid; border-color: var(--cinnabar); color: var(--cinnabar);
+      background: color-mix(in srgb, var(--cinnabar) 5%, transparent); }
+
+    .sloading { color: var(--ink-faint); text-align: center; padding: 2rem 0; }
+    .sno { color: var(--ink-faint); text-align: center; padding: 2.5rem 0; line-height: 2; }
+    .sno b { color: var(--ink); font-family: var(--serif); }
+  </style>
+
+  <script>
+    const { TYPE_COLOR } = await import('../lib/color.js');
+    const SUGGEST = ['林黛玉', '葬花吟', '判词', '太虚幻境', '抄检大观园', '海棠诗社', '通灵宝玉', '王熙凤', '大观园'];
+
+    const $ = (id) => document.getElementById(id);
+    const input = $('q'), results = $('results'), facetsEl = $('facets'),
+      countEl = $('scount'), emptyEl = $('sempty'), loadingEl = $('sloading'), clearBtn = $('clear');
+
+    let INDEX = [], typeFilter = 'all', active = -1, view = [];
+
+    const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const hl = (text, q) => {
+      if (!q) return esc(text);
+      const i = text.toLowerCase().indexOf(q.toLowerCase());
+      if (i < 0) return esc(text);
+      return esc(text.slice(0, i)) + '<mark>' + esc(text.slice(i, i + q.length)) + '</mark>' + esc(text.slice(i + q.length));
+    };
+    const snippet = (ex, q) => {
+      if (!q) return esc(ex);
+      const i = ex.toLowerCase().indexOf(q.toLowerCase());
+      if (i < 0) return esc(ex);
+      const start = Math.max(0, i - 28);
+      const s = (start > 0 ? '…' : '') + ex.slice(start);
+      return hl(s, q);
+    };
+
+    function rank(q) {
+      const ql = q.toLowerCase();
+      const pool = INDEX.filter((e) => (typeFilter === 'all' || e.ty === typeFilter) && e.blob.includes(ql));
+      return pool.map((e) => {
+        const t = e.t.toLowerCase();
+        let s = 4;
+        if (t === ql) s = 0; else if (t.startsWith(ql)) s = 1; else if (t.includes(ql)) s = 2;
+        else if ((e.sub || '').toLowerCase().includes(ql)) s = 3;
+        return { e, s };
+      }).sort((a, b) => a.s - b.s || a.e.t.length - b.e.t.length).map((x) => x.e);
+    }
+
+    function renderFacets(q) {
+      const counts = {};
+      const base = q ? INDEX.filter((e) => e.blob.includes(q.toLowerCase())) : INDEX;
+      for (const e of base) counts[e.ty] = (counts[e.ty] || 0) + 1;
+      const types = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+      const all = base.length;
+      const chip = (key, label, n) =>
+        `<button class="facet ${typeFilter === key ? 'on' : ''}" data-type="${key}">${label}<span class="fc">${n}</span></button>`;
+      facetsEl.innerHTML = chip('all', '全部', all) + types.map((t) => chip(t, t, counts[t])).join('');
+      facetsEl.querySelectorAll('.facet').forEach((b) => b.addEventListener('click', () => {
+        typeFilter = b.dataset.type; active = -1; run();
+      }));
+    }
+
+    function render() {
+      const q = input.value.trim();
+      clearBtn.hidden = !q;
+      if (!q) {
+        view = []; results.innerHTML = ''; countEl.textContent = '';
+        emptyEl.style.display = ''; renderFacets(''); return;
+      }
+      emptyEl.style.display = 'none';
+      view = rank(q);
+      renderFacets(q);
+      countEl.textContent = view.length ? `共 ${view.length} 条结果` : '';
+      if (!view.length) {
+        results.innerHTML = `<li class="sno">未找到与「<b>${esc(q)}</b>」相关的词条。<br>换个关键词，或检查筛选类型。</li>`;
+        return;
+      }
+      const cap = view.slice(0, 120);
+      results.innerHTML = cap.map((e, idx) => {
+        const fc = TYPE_COLOR[e.ty] || 'var(--cinnabar)';
+        return `<li class="ritem ${idx === active ? 'active' : ''}" style="--fc:${fc}">
+          <a class="rlink" href="/${e.r}/${encodeURIComponent(e.s)}">
+            <span class="rtop">
+              <span class="rtype">${esc(e.ty)}</span>
+              <span class="rtitle">${hl(e.t, q)}</span>
+              ${e.sub ? `<span class="rsub">${esc(e.sub)}</span>` : ''}
+            </span>
+            ${e.ex ? `<p class="rex">${snippet(e.ex, q)}</p>` : ''}
+          </a></li>`;
+      }).join('') + (view.length > cap.length ? `<li class="sno">仅显示前 ${cap.length} 条，请输入更精确的关键词。</li>` : '');
+    }
+
+    function setActive(n) {
+      const items = results.querySelectorAll('.ritem');
+      if (!items.length) return;
+      active = (n + items.length) % items.length;
+      items.forEach((el, i) => el.classList.toggle('active', i === active));
+      items[active].scrollIntoView({ block: 'nearest' });
+    }
+
+    let raf = 0;
+    function run() { cancelAnimationFrame(raf); raf = requestAnimationFrame(render); }
+
+    function syncUrl() {
+      const q = input.value.trim();
+      const u = new URL(location.href);
+      if (q) u.searchParams.set('q', q); else u.searchParams.delete('q');
+      history.replaceState(null, '', u);
+    }
+
+    input.addEventListener('input', () => { active = -1; run(); syncUrl(); });
+    clearBtn.addEventListener('click', () => { input.value = ''; active = -1; run(); syncUrl(); input.focus(); });
+    input.addEventListener('keydown', (ev) => {
+      if (ev.key === 'ArrowDown') { ev.preventDefault(); setActive(active + 1); }
+      else if (ev.key === 'ArrowUp') { ev.preventDefault(); setActive(active - 1); }
+      else if (ev.key === 'Enter') {
+        const items = results.querySelectorAll('.ritem .rlink');
+        if (active >= 0 && items[active]) location.href = items[active].getAttribute('href');
+        else if (items[0]) location.href = items[0].getAttribute('href');
+      } else if (ev.key === 'Escape') { input.value = ''; run(); syncUrl(); }
+    });
+
+    // 建议词
+    $('suggest').innerHTML = SUGGEST.map((s) => `<button class="chip" data-q="${esc(s)}">${esc(s)}</button>`).join('');
+    $('suggest').querySelectorAll('.chip').forEach((b) =>
+      b.addEventListener('click', () => { input.value = b.dataset.q; active = -1; run(); syncUrl(); input.focus(); }));
+
+    fetch('/search-index.json')
+      .then((r) => r.json())
+      .then((data) => {
+        INDEX = data;
+        loadingEl.style.display = 'none';
+        const q0 = new URLSearchParams(location.search).get('q');
+        if (q0) input.value = q0;
+        renderFacets(input.value.trim());
+        run();
+        input.focus();
+      })
+      .catch(() => { loadingEl.textContent = '检索索引载入失败，请稍后重试。'; });
+  </script>
+</Base>

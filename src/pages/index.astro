@@ -1,0 +1,653 @@
+---
+import Base from '../layouts/Base.astro';
+import {
+  graph, characters, poems, fate, chaptersData,
+  countByRoute, TYPE_LABEL, TYPE_TAGLINE, TYPE_ORDER,
+  pageById, familyColor,
+} from '../lib/data.js';
+
+const imgOf = (id) => { const p = pageById(id); return p?.cover || p?.images?.[0] || null; };
+
+const heroVideo = '/videos/hero-scrub.mp4';
+const heroPoster = '/videos/hero-poster.jpg';
+
+// 宝黛并立 + 正册十二钗（头像墙）
+const zhengce = characters.filter((c) => c.rank === '正册');
+const baoyu = characters.find((c) => c.slug === '贾宝玉') || { slug: '贾宝玉', title: '贾宝玉', id: '人物 - 贾宝玉', family: '贾家' };
+const baoyuImg = imgOf(baoyu.id);
+const daiyu = characters.find((c) => c.slug === '林黛玉') || zhengce.find((c) => c.title.includes('黛玉'));
+const daiyuImg = daiyu ? imgOf(daiyu.id) : null;
+// 其余十一钗（黛玉作为主位单独展示），按经典次第排列
+const chaiOrder = ['薛宝钗', '元春', '王熙凤', '探春', '史湘云', '妙玉', '迎春', '惜春', '李纨', '巧姐', '秦可卿'];
+const ring = chaiOrder
+  .map((t) => zhengce.find((c) => c.title === t))
+  .filter(Boolean)
+  .map((c) => ({ ...c, img: imgOf(c.id) }));
+
+// 人物名字走马灯（仅名字，不含判词）
+const marqueeNames = characters
+  .filter((c) => c.title)
+  .map((c) => ({ title: c.title, slug: c.slug }));
+
+// 命运·判词 预览
+const fateTeaser = fate.filter((f) => f.verdictKw).slice(0, 3);
+
+// 百二十回时间线
+const chapters = chaptersData.chapters;
+
+// 诗词名篇精选
+const famousSlugs = ['葬花吟', '枉凝眉', '终身误', '好了歌', '芙蓉女儿诔', '秋窗风雨夕', '题帕三绝', '咏白海棠-黛玉'];
+let poemPick = famousSlugs.map((s) => poems.find((p) => p.slug === s || p.title === s)).filter(Boolean);
+if (poemPick.length < 6) poemPick = poems.filter((p) => p.kind === '诗词单篇').slice(0, 6);
+poemPick = poemPick.slice(0, 6);
+
+// 全库统计
+const nodeCount = graph.nodes.length;
+const edgeCount = graph.edges.length;
+const totalEntries = Object.values(countByRoute).reduce((a, b) => a + b, 0);
+
+const tetrad = [
+  { href: '/graph', t: '人物关系网络', d: `${nodeCount} 词条、${edgeCount} 条互链结成的一张谱`, tag: '沉浸图谱', n: '01' },
+  { href: '/fate', t: '命运 · 判词', d: '判词曲文如何在后四十回一一应验、群芳流散', tag: '特色', n: '02' },
+  { href: '/poems', t: '诗词鉴赏', d: '判词、红楼梦曲、海棠菊花诗社与联句名篇', tag: `${countByRoute.poems} 篇`, n: '03' },
+  { href: '/chapters', t: '百二十回脉络', d: '分组总览到单回精读的完整时间线', tag: '120 回', n: '04' },
+];
+---
+
+<Base wide>
+  <!-- 整页暗色剧场背景：fixed 视频 + 电影感暗色遮罩 -->
+  <div class="stage" id="stage" aria-hidden="true">
+    <video class="stage-video" id="stageVideo" muted playsinline preload="metadata" poster={heroPoster}>
+      <source src={heroVideo} type="video/mp4" />
+    </video>
+    <span class="stage-scrim"></span>
+    <span class="stage-deepen" id="stageDeepen"></span>
+  </div>
+
+  <!-- 首屏 -->
+  <section class="hero" id="hero">
+    <div class="hero-inner">
+      <p class="kicker"><i></i><span>红 楼 梦 知 识 库</span></p>
+      <h1 class="title" aria-label="红楼梦">
+        <span class="ln">红</span><span class="ln">楼</span><span class="ln">梦</span>
+      </h1>
+      <div class="couplet">
+        <p>满纸荒唐言，一把辛酸泪。</p>
+        <p class="dim">都云作者痴，谁解其中味。</p>
+      </div>
+      <p class="lead">
+        一座以<strong>关系网</strong>与<strong>命运线</strong>为核心的红楼梦知识库——
+        {characters.length} 位人物、判词曲文、诗社雅集与百二十回脉络，在此徐徐展开。
+      </p>
+
+      <div class="cta">
+        <a href="/graph" class="btn btn-solid plain" data-magnetic>进入关系图谱 <span aria-hidden="true">→</span></a>
+        <a href="/characters" class="btn plain" data-magnetic>浏览人物</a>
+      </div>
+    </div>
+    <div class="hero-hint" id="heroHint" aria-hidden="true"><span>下滑 · 展卷</span><i></i></div>
+  </section>
+
+  <!-- 人物名字走马灯 -->
+  <div class="marquee" aria-label="红楼梦人物群像">
+    <div class="marquee-track">
+      {[...marqueeNames, ...marqueeNames].map((v) => (
+        <a href={`/characters/${v.slug}`} class="mq-item plain">
+          <span class="mq-name">{v.title}</span>
+        </a>
+      ))}
+    </div>
+  </div>
+
+  <main class="content">
+    <!-- 群芳谱 · 十二钗头像墙 -->
+    <section class="block galaxy" data-reveal>
+      <div class="b-head">
+        <div>
+          <p class="b-eyebrow">群芳谱</p>
+          <h2 class="b-title">正册十二钗</h2>
+        </div>
+        <a href="/characters" class="b-more plain" data-magnetic>全部 {characters.length} 人 →</a>
+      </div>
+      <div class="wall">
+        <a href={`/characters/${baoyu.slug}`} class="tile tile--feat tile--lead-l plain" style={`--fc:${familyColor(baoyu.family)}`}>
+          {baoyuImg ? <img src={baoyuImg} alt={baoyu.title} loading="lazy" decoding="async" /> : <span class="tile-bn">{baoyu.title}</span>}
+          <span class="tile-grad"></span>
+          <span class="tile-meta"><b>贾宝玉</b><i>情不情 · 通灵顽石</i></span>
+        </a>
+        {daiyu && (
+          <a href={`/characters/${daiyu.slug}`} class="tile tile--feat tile--lead-r plain" style={`--fc:${familyColor(daiyu.family)}`}>
+            {daiyuImg ? <img src={daiyuImg} alt={daiyu.title} loading="lazy" decoding="async" /> : <span class="tile-bn">{daiyu.title}</span>}
+            <span class="tile-grad"></span>
+            <span class="tile-meta"><b>林黛玉</b><i>{daiyu.verdictKw && daiyu.verdictKw !== '无' ? daiyu.verdictKw : '世外仙姝 · 潇湘'}</i></span>
+          </a>
+        )}
+        {ring.map((c) => (
+          <a href={`/characters/${c.slug}`} class="tile plain" style={`--fc:${familyColor(c.family)}`}>
+            {c.img ? <img src={c.img} alt={c.title} loading="lazy" decoding="async" /> : <span class="tile-bn">{c.title}</span>}
+            <span class="tile-grad"></span>
+            <span class="tile-meta"><b>{c.title}</b>{c.verdictKw && c.verdictKw !== '无' && <i>{c.verdictKw}</i>}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <!-- 命运 · 判词 预览 -->
+    <section class="block" data-reveal>
+      <div class="b-head">
+        <div>
+          <p class="b-eyebrow">太虚幻境</p>
+          <h2 class="b-title">命运 · 判词应验</h2>
+        </div>
+        <a href="/fate" class="b-more plain" data-magnetic>看判词如何落地 →</a>
+      </div>
+      <div class="fate-grid">
+        {fateTeaser.map((f) => (
+          <a href={`/characters/${f.slug}`} class="fate-card plain" style={`--fc:${familyColor(f.family)}`}>
+            <span class="fate-fam">{f.family}</span>
+            <h3>{f.title}</h3>
+            {f.verdictKw && <p class="fate-verse">{f.verdictKw}</p>}
+            {f.fate && <span class="fate-end">结局 · {Array.isArray(f.fate) ? f.fate.join('、') : f.fate}</span>}
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <!-- 百二十回 时间线 -->
+    <section class="block" data-reveal>
+      <div class="b-head">
+        <div>
+          <p class="b-eyebrow">时间线</p>
+          <h2 class="b-title">百二十回脉络</h2>
+        </div>
+        <a href="/chapters" class="b-more plain" data-magnetic>逐回精读 →</a>
+      </div>
+      <div class="timeline">
+        {chapters.map((c) => (
+          <a href={`/chapters/${c.slug}`} class="tl-cell plain" title={`第${c.no}回 ${c.title || ''}`}>
+            <span>{c.no}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <!-- 关系图谱 + 数据 -->
+    <section class="block stats-block" data-reveal>
+      <div class="stats">
+        <a href="/graph" class="stat plain" data-magnetic>
+          <span class="stat-n" data-count={nodeCount}>0</span>
+          <span class="stat-l">词条节点</span>
+        </a>
+        <a href="/graph" class="stat plain" data-magnetic>
+          <span class="stat-n" data-count={edgeCount}>0</span>
+          <span class="stat-l">关系互链</span>
+        </a>
+        <a href="/characters" class="stat plain" data-magnetic>
+          <span class="stat-n" data-count={characters.length}>0</span>
+          <span class="stat-l">人物群像</span>
+        </a>
+        <a href="/poems" class="stat plain" data-magnetic>
+          <span class="stat-n" data-count={countByRoute.poems}>0</span>
+          <span class="stat-l">诗词名篇</span>
+        </a>
+      </div>
+      <a href="/graph" class="graph-cta plain" data-magnetic>
+        <div>
+          <h3>一张可漫游的关系全景</h3>
+          <p>{nodeCount} 个节点、{edgeCount} 条互链，按家族着色，拖拽探索人物之间的牵连。</p>
+        </div>
+        <span class="graph-arrow" aria-hidden="true">→</span>
+      </a>
+    </section>
+
+    <!-- 四径 -->
+    <section class="block tetrad" data-reveal>
+      {tetrad.map((c) => (
+        <a href={c.href} class="tcard plain" data-magnetic>
+          <span class="tnum">{c.n}</span>
+          <span class="tag-accent">{c.tag}</span>
+          <h3>{c.t}</h3>
+          <p>{c.d}</p>
+          <span class="go">入 →</span>
+        </a>
+      ))}
+    </section>
+
+    <!-- 诗词名篇 -->
+    <section class="block" data-reveal>
+      <div class="b-head">
+        <div>
+          <p class="b-eyebrow">诗以言志</p>
+          <h2 class="b-title">诗词名篇</h2>
+        </div>
+        <a href="/poems" class="b-more plain" data-magnetic>{countByRoute.poems} 篇全收 →</a>
+      </div>
+      <div class="poem-grid">
+        {poemPick.map((p) => (
+          <a href={`/poems/${p.slug}`} class="poem-card plain">
+            <span class="poem-t">{p.title}</span>
+            <span class="poem-m">{[].concat(p.poemType || [], p.owner || []).filter(Boolean).join(' · ') || '名篇'}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <!-- 全库导航 -->
+    <section class="block cats" data-reveal>
+      <div class="b-head">
+        <div>
+          <p class="b-eyebrow">全库导航</p>
+          <h2 class="b-title">十一类 · {totalEntries} 词条</h2>
+        </div>
+      </div>
+      <div class="cat-grid">
+        {TYPE_ORDER.map((r) => (
+          <a href={`/${r}`} class="cat plain" data-magnetic>
+            <span class="cat-c" data-count={countByRoute[r]}>0</span>
+            <span class="cat-n">{TYPE_LABEL[r]}</span>
+            <span class="cat-t">{TYPE_TAGLINE[r]}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+  </main>
+</Base>
+
+<style>
+  /* ============ 暗色剧场背景（暖墨基调，留一抹颜色，不再纯黑）============ */
+  .stage { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: #181019; pointer-events: none; }
+  /* 视频保留较多色彩，仅轻度去饱和，使首屏有暖意 */
+  .stage-video {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block;
+    filter: grayscale(.34) contrast(1.05) brightness(1.0) saturate(1.05);
+    will-change: auto; /* 仅在滚动时由 JS 动态设置 */
+  }
+  /* 电影感遮罩：暖紫墨调 + 右上一抹朱砂晕，文字清晰、画面常可见且有颜色 */
+  .stage-scrim {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(120% 88% at 80% 14%, color-mix(in srgb, var(--cinnabar) 18%, transparent) 0%, transparent 46%),
+      radial-gradient(110% 70% at 12% 90%, color-mix(in srgb, #3a5a52 22%, transparent) 0%, transparent 52%),
+      radial-gradient(130% 100% at 70% 24%, transparent 42%, rgba(22,13,20,.56) 100%),
+      linear-gradient(to bottom, rgba(24,14,22,.44) 0%, rgba(24,14,22,.10) 24%, rgba(20,12,18,.24) 60%, rgba(16,10,16,.64) 100%);
+  }
+  /* 随滚动整体再加深一档，越往下越沉，但保留暖墨色，不盖成死黑 */
+  .stage-deepen {
+    position: absolute; inset: 0; background: #140d16; opacity: 0;
+    will-change: opacity;
+    transform: translateZ(0); /* 强制 GPU 加速 */
+  }
+  html:not(.has-js) .stage-deepen { opacity: .55; }
+
+  /* ============ 首屏 ============ */
+  .hero {
+    position: relative; z-index: 1; min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center;
+    margin-top: calc(-1 * clamp(1.6rem, 4vw, 3rem));
+    padding-inline: clamp(1.5rem, 6vw, 6rem);
+    color: #fff;
+  }
+  .hero-inner {
+    max-width: min(92vw, 46rem);
+    transform: translateZ(0); /* 创建合成层，避免重排 */
+  }
+  .kicker {
+    display: flex; align-items: center; gap: 1rem; margin-bottom: 1.6rem;
+    font-family: var(--sans); font-size: .82rem; letter-spacing: .42em;
+    color: rgba(240,240,236,.8);
+  }
+  .kicker i { flex: 0 0 3.2rem; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,.7), transparent); }
+  .title {
+    font-family: var(--serif); font-weight: 900; line-height: .96; letter-spacing: .04em; margin: 0;
+    display: flex; gap: .02em;
+    filter: drop-shadow(0 6px 24px rgba(10,7,8,.5));
+  }
+  .title .ln {
+    font-size: clamp(5rem, 3rem + 16vw, 13rem); display: inline-block;
+    color: #F4F2EC;
+    text-shadow: 0 1px 1px rgba(8,8,10,.55), 0 4px 30px rgba(8,8,10,.55);
+    transform: translateZ(0); /* 每个字符独立合成层 */
+  }
+  .couplet { margin-top: 1.6rem; }
+  .couplet p { font-family: var(--serif); font-size: clamp(1.05rem, 1rem + .6vw, 1.4rem); letter-spacing: .14em; line-height: 1.9; color: rgba(247,239,221,.94); }
+  .couplet .dim { color: rgba(247,239,221,.62); }
+  .lead { margin-top: 1.8rem; max-width: 36rem; line-height: 2; color: rgba(238,238,234,.82); }
+  .lead strong { color: #fff; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,.4); }
+
+  .cta { display: flex; gap: 1rem; margin-top: 2.4rem; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: .5rem; padding: .85rem 1.9rem;
+    border: 1px solid rgba(255,255,255,.45); border-radius: 999px; color: #fff;
+    font-size: 1rem; letter-spacing: .04em; backdrop-filter: blur(4px);
+    transition: transform var(--speed) var(--ease), background var(--speed) var(--ease), border-color var(--speed) var(--ease), color var(--speed) var(--ease);
+  }
+  .btn:hover { border-color: #fff; transform: translateY(-2px); }
+  /* 首屏主 CTA 保留一抹朱砂作大点睛（剧场深底上的视觉锚点）*/
+  .btn-solid { background: var(--cinnabar); border-color: var(--cinnabar); }
+  .btn-solid:hover { background: var(--cinnabar-br); border-color: var(--cinnabar-br); }
+  .btn-solid span { transition: transform var(--speed) var(--ease); }
+  .btn-solid:hover span { transform: translateX(4px); }
+
+  .hero-hint {
+    position: absolute; left: 50%; bottom: 1.8rem; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: .5rem;
+    color: rgba(255,255,255,.7); font-size: .72rem; letter-spacing: .28em;
+  }
+  .hero-hint i { width: 1px; height: 2.2rem; background: linear-gradient(rgba(255,255,255,.85), transparent); animation: hintFall 1.8s var(--ease) infinite; }
+  @keyframes hintFall {
+    0% { transform: scaleY(0); transform-origin: top; }
+    45% { transform: scaleY(1); transform-origin: top; }
+    55% { transform: scaleY(1); transform-origin: bottom; }
+    100% { transform: scaleY(0); transform-origin: bottom; }
+  }
+
+  /* ============ 判词走马灯 ============ */
+  .marquee {
+    position: relative; z-index: 1; overflow: hidden;
+    border-block: 1px solid rgba(255,255,255,.14);
+    padding: 1.1rem 0; background: rgba(10,7,8,.42); backdrop-filter: blur(6px);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+            mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+  .marquee-track {
+    display: inline-flex; align-items: center; white-space: nowrap;
+    animation: mq 80s linear infinite;
+    will-change: transform;
+    transform: translateZ(0); /* 强制 GPU 加速 */
+  }
+  .marquee:hover .marquee-track { animation-play-state: paused; }
+  @keyframes mq { to { transform: translate3d(-50%, 0, 0); } }
+  .mq-item { display: inline-flex; align-items: center; padding-inline: 1.5rem; position: relative; }
+  .mq-item::after {
+    content: ""; position: absolute; right: -3px; top: 50%; transform: translateY(-50%) rotate(45deg);
+    width: 5px; height: 5px; background: rgba(255,255,255,.5);
+    opacity: .55;
+  }
+  .mq-name {
+    font-family: var(--serif); font-size: 1.18rem; letter-spacing: .16em;
+    color: rgba(244,244,240,.8); transition: color var(--speed) var(--ease);
+  }
+  .mq-item:hover .mq-name { color: #fff; }
+
+  /* ============ 正文（随主题切换 · 脱离视频剧场）============ */
+  /* content 用不透明主题底覆住下方 fixed 视频，使其成为正常的明/暗页面 */
+  .content {
+    position: relative; z-index: 1;
+    background: var(--paper); color: var(--ink);
+    padding-bottom: clamp(3rem, 8vw, 6rem);
+    border-top: 1px solid var(--ink-hair);
+  }
+  /* 剧场 → 正文 的柔和过渡：顶端一段渐变，避免硬切 */
+  .content::before {
+    content: ""; position: absolute; left: 0; right: 0; top: -3rem; height: 3rem;
+    background: linear-gradient(to bottom, transparent, var(--paper));
+    pointer-events: none;
+  }
+  .block { width: min(100% - 3rem, var(--wide)); margin: clamp(4rem, 9vh, 7rem) auto 0; }
+  .b-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: 1.8rem; padding-bottom: 1rem; border-bottom: 1px solid var(--ink-hair); }
+  .b-eyebrow { font-size: .78rem; letter-spacing: .36em; color: var(--ink-faint); margin-bottom: .55rem; font-weight: 600; }
+  .b-title { font-family: var(--serif); font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.6rem); color: var(--ink); letter-spacing: .02em; }
+  /* 标题旁朱砂短钤（唯一红点睛）*/
+  .b-title { position: relative; padding-left: .9rem; }
+  .b-title::before { content: ""; position: absolute; left: 0; top: .18em; bottom: .18em; width: 3px; background: var(--cinnabar); border-radius: 2px; }
+  .b-more { color: var(--ink-2); font-size: .92rem; white-space: nowrap; }
+  .b-more:hover { color: var(--ink); }
+
+  /* 头像墙 */
+  .wall { display: grid; gap: .9rem; grid-template-columns: repeat(4, 1fr); }
+  .tile { position: relative; aspect-ratio: 1; border-radius: var(--radius); overflow: hidden; background: var(--paper-sunk); box-shadow: var(--shadow-sm); }
+  .tile--feat { aspect-ratio: 1; }
+  .tile--lead-l { grid-column: 1 / span 2; grid-row: 1 / span 2; }
+  .tile--lead-r { grid-column: 3 / span 2; grid-row: 1 / span 2; }
+  .tile--feat::after { border-width: 1.5px; }
+  .tile img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(.4) contrast(1.03); transition: transform .8s var(--ease), filter .6s var(--ease); }
+  .tile:hover img { transform: scale(1.06); filter: grayscale(0) contrast(1.04); }
+  .tile-bn { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--serif); font-size: 1.4rem; color: var(--ink); }
+  .tile-grad { position: absolute; inset: 0; background: linear-gradient(to top, rgba(10,10,12,.92) 0%, rgba(10,10,12,.12) 48%, transparent 72%); }
+  .tile-meta { position: absolute; left: .8rem; right: .8rem; bottom: .7rem; display: flex; flex-direction: column; gap: .15rem; transform: translateY(.4rem); opacity: .94; transition: transform var(--speed) var(--ease); }
+  .tile:hover .tile-meta { transform: none; }
+  .tile-meta b { font-family: var(--serif); font-size: 1.02rem; color: #fff; }
+  .tile--feat .tile-meta b { font-size: 1.5rem; }
+  .tile-meta i { font-style: normal; font-size: .78rem; color: rgba(255,255,255,.86); letter-spacing: .04em; }
+  .tile::after { content: ""; position: absolute; inset: 0; border: 1px solid transparent; border-radius: var(--radius); transition: border-color var(--speed) var(--ease); }
+  .tile:hover::after { border-color: var(--fc, var(--ink)); border-width: 1.5px; }
+  /* 头像底部一抹家族色细条，黑白基调里透出辨识色 */
+  .tile-meta b { border-bottom: 2px solid var(--fc, transparent); padding-bottom: .1rem; align-self: flex-start; }
+
+  /* 命运卡 */
+  .fate-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
+  .fate-card { position: relative; padding: 1.6rem 1.5rem; border-radius: var(--radius); background: var(--paper-2); border: 1px solid var(--ink-hair); border-left: 3px solid var(--fc, var(--ink-faint)); overflow: hidden; box-shadow: var(--shadow-sm); transition: transform var(--speed) var(--ease), box-shadow var(--speed) var(--ease), border-color var(--speed) var(--ease); }
+  .fate-card::before { content: ""; position: absolute; inset: 0; background: linear-gradient(135deg, color-mix(in srgb, var(--fc) 7%, transparent), transparent 42%); pointer-events: none; opacity: 0; transition: opacity var(--speed) var(--ease); }
+  .fate-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); border-color: color-mix(in srgb, var(--fc) 45%, var(--ink-hair)); }
+  .fate-card:hover::before { opacity: 1; }
+  .fate-fam { font-size: .78rem; letter-spacing: .14em; color: var(--fc, var(--ink-faint)); font-weight: 700; position: relative; }
+  .fate-card h3 { font-family: var(--serif); font-size: 1.5rem; color: var(--ink); margin: .3rem 0 .6rem; }
+  .fate-verse { font-family: var(--serif); color: var(--ink-2); line-height: 1.8; letter-spacing: .03em; }
+  .fate-end { display: inline-block; margin-top: .9rem; font-size: .84rem; color: var(--cinnabar); font-weight: 600; }
+
+  /* 时间线 */
+  .timeline { display: grid; grid-template-columns: repeat(auto-fill, minmax(2.3rem, 1fr)); gap: .35rem; }
+  .tl-cell { display: grid; place-items: center; aspect-ratio: 1; border-radius: 3px; background: var(--paper-2); border: 1px solid var(--ink-hair); font-size: .8rem; color: var(--ink-2); transition: all var(--speed) var(--ease); }
+  .tl-cell:hover { background: var(--ink); border-color: var(--ink); color: var(--paper); transform: translateY(-2px); }
+
+  /* 数据 + 图谱 CTA */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.2rem; }
+  .stat { display: flex; flex-direction: column; gap: .3rem; padding: 1.5rem 1.2rem; border-radius: var(--radius); background: var(--paper-2); border: 1px solid var(--ink-hair); box-shadow: var(--shadow-sm); transition: all var(--speed) var(--ease); }
+  .stat:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--ink-faint); }
+  .stat-n { font-family: var(--serif); font-size: clamp(2rem, 1.4rem + 2.4vw, 3.4rem); font-weight: 800; color: var(--ink); line-height: 1; }
+  .stat-l { font-size: .86rem; color: var(--ink-2); letter-spacing: .08em; }
+  /* 关系全景 CTA：暖墨深底锚点块（朱砂晕 + 黛绿压角，不再纯黑）*/
+  .graph-cta {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.8rem 2rem;
+    border-radius: var(--radius); position: relative; overflow: hidden;
+    background:
+      radial-gradient(120% 170% at 90% 8%, color-mix(in srgb, var(--cinnabar) 30%, transparent), transparent 52%),
+      radial-gradient(120% 150% at 6% 100%, color-mix(in srgb, #3a5a52 28%, transparent), transparent 50%),
+      linear-gradient(120deg, #2a1822 0%, var(--jade-deep) 62%);
+    border: 1px solid color-mix(in srgb, var(--cinnabar) 28%, var(--jade-deep));
+    box-shadow: var(--shadow-sm); transition: all var(--speed) var(--ease);
+  }
+  .graph-cta:hover { box-shadow: var(--shadow); transform: translateY(-3px); border-color: color-mix(in srgb, var(--cinnabar) 55%, var(--jade-deep)); }
+  .graph-cta h3 { font-family: var(--serif); font-size: 1.5rem; color: #fff; position: relative; }
+  .graph-cta p { color: rgba(255,255,255,.78); margin-top: .4rem; max-width: 42rem; }
+  .graph-arrow { font-size: 2rem; color: #fff; transition: transform var(--speed) var(--ease); }
+  .graph-cta:hover .graph-arrow { transform: translateX(8px); }
+
+  /* 四径 */
+  .tetrad { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
+  .tcard { position: relative; display: flex; flex-direction: column; gap: .55rem; min-height: 12rem; padding: 1.6rem 1.5rem; border-radius: var(--radius); background: var(--paper-2); border: 1px solid var(--ink-hair); overflow: hidden; box-shadow: var(--shadow-sm); transition: transform var(--speed) var(--ease), box-shadow var(--speed) var(--ease), border-color var(--speed) var(--ease); }
+  .tcard:hover { transform: translateY(-5px); box-shadow: var(--shadow); border-color: var(--ink); }
+  .tnum { position: absolute; top: 1rem; right: 1.2rem; font-family: var(--serif); font-size: 2.4rem; color: color-mix(in srgb, var(--ink) 12%, transparent); }
+  .tag-accent { align-self: flex-start; font-size: .76rem; letter-spacing: .08em; color: var(--ink-2); font-weight: 600; border: 1px solid var(--ink-hair); padding: .12em .8em; border-radius: 999px; }
+  .tcard:hover .tag-accent { border-color: var(--cinnabar); color: var(--cinnabar); }
+  .tcard h3 { font-family: var(--serif); font-size: 1.5rem; color: var(--ink); }
+  .tcard p { color: var(--ink-2); line-height: 1.7; flex: 1; }
+  .tcard .go { color: var(--ink); font-weight: 700; letter-spacing: .1em; }
+
+  /* 诗词 */
+  .poem-grid { display: grid; gap: .9rem; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); }
+  .poem-card { display: flex; flex-direction: column; gap: .4rem; padding: 1.3rem 1.4rem; border-radius: var(--radius); background: var(--paper-2); border: 1px solid var(--ink-hair); box-shadow: var(--shadow-sm); transition: all var(--speed) var(--ease); }
+  .poem-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--ink); }
+  .poem-t { font-family: var(--serif); font-size: 1.2rem; color: var(--ink); }
+  .poem-m { font-size: .82rem; color: var(--ink-faint); letter-spacing: .04em; font-weight: 600; }
+
+  /* 类目 */
+  .cat-grid { display: grid; gap: .8rem; grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); }
+  .cat { display: flex; flex-direction: column; align-items: flex-start; gap: .15rem; padding: 1.3rem 1.2rem; border-radius: var(--radius); background: var(--paper-2); border: 1px solid var(--ink-hair); box-shadow: var(--shadow-sm); transition: all var(--speed) var(--ease); }
+  .cat:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--ink); }
+  .cat-c { font-family: var(--serif); font-size: 1.9rem; color: var(--ink); font-weight: 800; line-height: 1; }
+  .cat-n { font-size: 1.12rem; font-weight: 700; color: var(--ink); }
+  .cat-t { font-size: .76rem; color: var(--ink-faint); }
+
+  @media (max-width: 880px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .graph-cta { flex-direction: column; align-items: flex-start; }
+    .lead { display: none; }
+  }
+  @media (max-width: 540px) {
+    .wall { grid-template-columns: repeat(2, 1fr); }
+    /* 手机端：宝玉、黛玉仍一左一右，各占一列、双倍高 */
+    .tile--lead-l { grid-column: 1 / span 1; grid-row: 1 / span 2; aspect-ratio: 1 / 2; }
+    .tile--lead-r { grid-column: 2 / span 1; grid-row: 1 / span 2; aspect-ratio: 1 / 2; }
+  }
+</style>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  gsap.registerPlugin(ScrollTrigger);
+
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+  // —— 背景视频逐帧擦洗（优化性能：降低帧率阈值 + 节流）—— //
+  const video = /** @type {HTMLVideoElement|null} */ (document.getElementById('stageVideo'));
+  const deepen = document.getElementById('stageDeepen');
+
+  function initScrub() {
+    if (!video) return;
+    const duration = video.duration || 1;
+    let targetTime = 0, rafId = 0, lastSeek = 0;
+    const EPS = 1 / 30; // 从 48fps 降到 30fps，减少 seek 调用
+    const THROTTLE = 16; // 最小 16ms 间隔（约 60fps）节流 seek
+
+    const pump = () => {
+      rafId = 0;
+      const now = performance.now();
+      if (!video.seeking && Math.abs(video.currentTime - targetTime) > EPS && now - lastSeek > THROTTLE) {
+        video.currentTime = targetTime;
+        lastSeek = now;
+      }
+      if (Math.abs(video.currentTime - targetTime) > EPS) rafId = requestAnimationFrame(pump);
+    };
+    const seek = (t) => {
+      targetTime = Math.max(0, Math.min(duration, t));
+      if (!rafId) rafId = requestAnimationFrame(pump);
+    };
+    const proxy = { t: 0 };
+    gsap.to(proxy, {
+      t: duration, ease: 'none',
+      scrollTrigger: {
+        trigger: '#hero',
+        start: 'top top',
+        end: '55% top',
+        scrub: 0.8, // 从 0.6 提高到 0.8，更平滑但响应稍慢
+        invalidateOnRefresh: true,
+        onUpdate: () => seek(proxy.t)
+      },
+    });
+    if (deepen) {
+      gsap.fromTo(deepen, { opacity: 0 }, {
+        opacity: 0.55, ease: 'none',
+        scrollTrigger: { trigger: '#hero', start: 'bottom bottom', end: 'bottom top', scrub: 1 }, // 增加 scrub 平滑度
+      });
+    }
+    gsap.to('#heroHint', { opacity: 0, ease: 'none', scrollTrigger: { trigger: '#hero', start: 'top top', end: '12% top', scrub: 1 } });
+  }
+
+  if (video && !reduce) {
+    let started = false, armed = false;
+    // 预热首帧解码：先把视频解到第 0 帧并暂停，避免第一次 seek 时同步解码造成的掉帧
+    const warmFirstFrame = () => {
+      video.play().then(() => { video.pause(); video.currentTime = 0; }).catch(() => {});
+    };
+    const start = () => {
+      if (started) return;
+      started = true;
+      initScrub();
+      ScrollTrigger.refresh();
+    };
+    // 懒加载：preload=metadata 下浏览器不主动下载主体。用户开始滚动或 hero 即将离开视口时再 arm。
+    const arm = () => {
+      if (armed) return;
+      armed = true;
+      video.preload = 'auto';
+      video.load();
+      warmFirstFrame();
+      if (video.readyState >= 4) start();
+      else {
+        video.addEventListener('canplaythrough', start, { once: true });
+        video.addEventListener('loadedmetadata', () => {
+          setTimeout(() => { if (!started) start(); }, 1200);
+        }, { once: true });
+      }
+    };
+    // 用户一旦开始向下滚动（即将触发擦洗）就 arm；或 idle 3s 后兜底 arm，保证首屏也有视频可擦
+    let armedTimer = 0;
+    const onFirstScroll = () => {
+      window.removeEventListener('scroll', onFirstScroll, { passive: true });
+      clearTimeout(armedTimer);
+      arm();
+    };
+    window.addEventListener('scroll', onFirstScroll, { passive: true });
+    armedTimer = setTimeout(arm, 3000);
+  } else if (deepen && reduce) {
+    deepen.style.opacity = '0.55';
+  }
+
+  // —— 首屏标题逐字浮现（优化性能：使用 transform 和 will-change）—— //
+  if (!reduce) {
+    // 为动画元素提前声明 will-change，让浏览器提前开启硬件加速
+    const titleChars = document.querySelectorAll('.title .ln');
+    const heroItems = document.querySelectorAll('.kicker, .couplet, .lead, .cta');
+    titleChars.forEach(el => el.style.willChange = 'transform, opacity');
+    heroItems.forEach(el => el.style.willChange = 'transform, opacity');
+
+    // 使用 transform: translate3d 强制 GPU 加速，避免 yPercent 的重排
+    gsap.from('.title .ln', {
+      y: 40,
+      opacity: 0,
+      duration: 0.8,
+      ease: 'power2.out',
+      stagger: 0.06,
+      delay: 0.15,
+      onComplete: () => titleChars.forEach(el => el.style.willChange = 'auto')
+    });
+    gsap.from('.kicker, .couplet, .lead, .cta', {
+      y: 20,
+      opacity: 0,
+      duration: 0.7,
+      ease: 'power2.out',
+      stagger: 0.1,
+      delay: 0.4,
+      onComplete: () => heroItems.forEach(el => el.style.willChange = 'auto')
+    });
+  }
+
+  // —— 磁吸按钮 —— //
+  if (!reduce && fine) {
+    document.querySelectorAll('[data-magnetic]').forEach((el) => {
+      const strength = 0.3;
+      let raf = 0;
+      el.addEventListener('mousemove', (e) => {
+        const r = el.getBoundingClientRect();
+        const x = (e.clientX - r.left - r.width / 2) * strength;
+        const y = (e.clientY - r.top - r.height / 2) * strength;
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(() => { el.style.transform = `translate(${x}px, ${y}px)`; });
+      });
+      el.addEventListener('mouseleave', () => { cancelAnimationFrame(raf); el.style.transform = ''; });
+    });
+  }
+
+  // —— 数字 count-up —— //
+  const counters = document.querySelectorAll('[data-count]');
+  if (counters.length) {
+    const animate = (el) => {
+      const target = parseInt(el.dataset.count || '0', 10);
+      if (reduce || !target) { el.textContent = String(target); return; }
+      const dur = 1100, start = performance.now();
+      const tick = (now) => {
+        const p = Math.min((now - start) / dur, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = String(Math.round(target * eased));
+        if (p < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    };
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) { animate(e.target); io.unobserve(e.target); } });
+    }, { threshold: 0.4 });
+    counters.forEach((el) => io.observe(el));
+  }
+</script>

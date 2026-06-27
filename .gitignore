@@ -1,0 +1,17 @@
+# build output
+dist/
+.astro/
+
+# dependencies
+node_modules/
+
+# generated data (run `npm run build:data` to regenerate)
+src/data/*.json
+public/images/
+public/search-index.json
+public/graph.json
+public/sitemap.xml
+public/robots.txt
+
+# os
+.DS_Store

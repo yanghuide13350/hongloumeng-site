@@ -1,0 +1,40 @@
+{
+	"nodes":[
+		{"id":"title","type":"text","text":"# 红楼梦核心人物关系图\n\n**宝黛钗三角 + 贾府权力结构 + 十二钗关系网**\n\n---\n\n## 图例\n- 🔴 **红色** - 宝黛钗情感主线\n- 🟡 **黄色** - 贾府权力核心\n- 🔵 **蓝色** - 十二钗群像\n- 🟣 **紫色** - 外戚与联姻","x":-1200,"y":-400,"width":350,"height":300,"color":"6"},
+		{"id":"baoyu","type":"file","file":"书籍/红楼梦知识库/知识库/人物/人物 - 贾宝玉.md","x":0,"y":0,"width":300,"height":220,"color":"1"},
+		{"id":"daiyu","type":"file","file":"书籍/红楼梦知识库/知识库/人物/人物 - 林黛玉.md","x":-400,"y":-300,"width":300,"height":220,"color":"1"},
+		{"id":"baochai","type":"file","file":"书籍/红楼梦知识库/知识库/人物/人物 - 薛宝钗.md","x":400,"y":-300,"width":300,"height":220,"color":"1"},
+		{"id":"jiamu","type":"file","file":"书籍/红楼梦知识库/知识库/人物/人物 - 贾母.md","x":0,"y":-600,"width":300,"height":200,"color":"3"},
+		{"id":"xifeng","type":"file","file":"书籍/红楼梦知识库/知识库/人物/人物 - 王熙凤.md","x":-600,"y":200,"width":300,"height":200,"color":"3"},
+		{"id":"wangfuren","type":"file","file":"书籍/红楼梦知识库/知识库/人物/人物 - 王夫人.md","x":600,"y":200,"width":280,"height":180,"color":"3"},
+		{"id":"xiangyun","type":"file","file":"书籍/红楼梦知识库/知识库/人物/人物 - 史湘云.md","x":-800,"y":-300,"width":280,"height":180,"color":"4"},
+		{"id":"tanchun","type":"file","file":"书籍/红楼梦知识库/知识库/人物/人物 - 探春.md","x":800,"y":-300,"width":280,"height":180,"color":"4"},
+		{"id":"xichun","type":"file","file":"书籍/红楼梦知识库/知识库/人物/人物 - 惜春.md","x":-800,"y":0,"width":280,"height":180,"color":"4"},
+		{"id":"miaoyu","type":"file","file":"书籍/红楼梦知识库/知识库/人物/人物 - 妙玉.md","x":800,"y":0,"width":280,"height":180,"color":"4"},
+		{"id":"yuanchun","type":"file","file":"书籍/红楼梦知识库/知识库/人物/人物 - 元春.md","x":0,"y":-950,"width":300,"height":200,"color":"5"},
+		{"id":"qingwen","type":"file","file":"书籍/红楼梦知识库/知识库/人物/人物 - 晴雯.md","x":-400,"y":250,"width":260,"height":160,"color":"2"},
+		{"id":"xiren","type":"file","file":"书籍/红楼梦知识库/知识库/人物/人物 - 袭人.md","x":200,"y":250,"width":260,"height":160,"color":"2"}
+	],
+	"edges":[
+		{"id":"e1","fromNode":"baoyu","toNode":"daiyu","label":"木石前盟","color":"1","fromSide":"top","toSide":"bottom"},
+		{"id":"e2","fromNode":"baoyu","toNode":"baochai","label":"金玉良姻","color":"3","fromSide":"top","toSide":"bottom"},
+		{"id":"e3","fromNode":"jiamu","toNode":"baoyu","label":"嫡孙·偏爱","fromSide":"bottom","toSide":"top"},
+		{"id":"e4","fromNode":"jiamu","toNode":"daiyu","label":"外孙女·疼爱","fromSide":"bottom","toSide":"top"},
+		{"id":"e5","fromNode":"jiamu","toNode":"xifeng","label":"掌家媳妇","fromSide":"bottom","toSide":"top"},
+		{"id":"e6","fromNode":"wangfuren","toNode":"baochai","label":"外甥女·金玉","fromSide":"top","toSide":"bottom"},
+		{"id":"e7","fromNode":"wangfuren","toNode":"baoyu","label":"嫡子","fromSide":"left","toSide":"right"},
+		{"id":"e8","fromNode":"baoyu","toNode":"xiangyun","label":"姐弟情谊","fromSide":"left","toSide":"right"},
+		{"id":"e9","fromNode":"baoyu","toNode":"tanchun","label":"兄妹·赏识","fromSide":"right","toSide":"left"},
+		{"id":"e10","fromNode":"baoyu","toNode":"xichun","label":"兄妹","fromSide":"left","toSide":"right"},
+		{"id":"e11","fromNode":"baoyu","toNode":"miaoyu","label":"惜才","fromSide":"right","toSide":"left"},
+		{"id":"e12","fromNode":"yuanchun","toNode":"jiamu","label":"长孙女·贤德妃","fromSide":"bottom","toSide":"top"},
+		{"id":"e13","fromNode":"baoyu","toNode":"qingwen","label":"怡红院首席丫鬟","fromSide":"left","toSide":"right"},
+		{"id":"e14","fromNode":"baoyu","toNode":"xiren","label":"通房大丫鬟","fromSide":"bottom","toSide":"top"},
+		{"id":"e15","fromNode":"daiyu","toNode":"xiangyun","label":"姐妹情深","fromSide":"left","toSide":"right"},
+		{"id":"e16","fromNode":"daiyu","toNode":"baochai","label":"情敌·后和解","color":"5","fromSide":"right","toSide":"left"}
+	],
+	"metadata":{
+		"version":"1.0-1.0",
+		"frontmatter":{}
+	}
+}

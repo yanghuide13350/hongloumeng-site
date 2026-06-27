@@ -1,0 +1,32 @@
+{
+	"nodes":[
+		{"id":"title","type":"text","text":"# 大观园空间布局图\n\n《红楼梦》第17回「大观园试才题对额」所建，贾府为迎接元春省亲而建的大型园林。\n\n---\n\n**图例**：\n- 🏠 **居所** - 主要人物住处\n- 🌸 **景点** - 雅集场所\n- 🚪 **入口** - 主要通道\n\n**色彩编码**：\n- 红色 - 宝玉居所\n- 蓝色 - 黛玉居所  \n- 黄色 - 宝钗居所\n- 紫色 - 其他小姐居所\n- 绿色 - 雅集水榭","x":-800,"y":-400,"width":400,"height":400,"color":"6"},
+		{"id":"yihongyuan","type":"file","file":"书籍/红楼梦知识库/知识库/地点/地点 - 怡红院.md","x":0,"y":0,"width":280,"height":200,"color":"1"},
+		{"id":"xiaoxiangguan","type":"file","file":"书籍/红楼梦知识库/知识库/地点/地点 - 潇湘馆.md","x":-600,"y":-200,"width":280,"height":200,"color":"4"},
+		{"id":"hengwuyuan","type":"file","file":"书籍/红楼梦知识库/知识库/地点/地点 - 蘅芜苑.md","x":600,"y":-200,"width":280,"height":200,"color":"3"},
+		{"id":"daoxiangcun","type":"file","file":"书籍/红楼梦知识库/知识库/地点/地点 - 稻香村.md","x":-600,"y":300,"width":280,"height":180,"color":"5"},
+		{"id":"qiushuangzhai","type":"file","file":"书籍/红楼梦知识库/知识库/地点/地点 - 秋爽斋.md","x":600,"y":300,"width":280,"height":180,"color":"5"},
+		{"id":"longcuian","type":"file","file":"书籍/红楼梦知识库/知识库/地点/地点 - 栊翠庵.md","x":0,"y":-500,"width":280,"height":180,"color":"5"},
+		{"id":"ouxiangxie","type":"file","file":"书籍/红楼梦知识库/知识库/地点/地点 - 藕香榭.md","x":-300,"y":600,"width":280,"height":160,"color":"2"},
+		{"id":"luxuean","type":"file","file":"书籍/红楼梦知识库/知识库/地点/地点 - 芦雪庵.md","x":300,"y":600,"width":280,"height":160,"color":"2"},
+		{"id":"aojingguan","type":"file","file":"书籍/红楼梦知识库/知识库/地点/地点 - 凹晶馆.md","x":0,"y":800,"width":280,"height":160,"color":"2"},
+		{"id":"entrance","type":"text","text":"🚪 **正门入口**\n\n从荣国府进入","x":0,"y":-800,"width":200,"height":120,"color":"6"},
+		{"id":"center","type":"text","text":"🌊 **沁芳闸 · 沁芳亭**\n\n园中心水景\n诸芳所环","x":0,"y":250,"width":200,"height":140,"color":"2"}
+	],
+	"edges":[
+		{"id":"e1","fromNode":"entrance","toNode":"longcuian","label":"入园先见","fromSide":"bottom","toSide":"top"},
+		{"id":"e2","fromNode":"longcuian","toNode":"yihongyuan","label":"南行","fromSide":"bottom","toSide":"top"},
+		{"id":"e3","fromNode":"yihongyuan","toNode":"xiaoxiangguan","label":"西向","fromSide":"left","toSide":"right"},
+		{"id":"e4","fromNode":"yihongyuan","toNode":"hengwuyuan","label":"东向","fromSide":"right","toSide":"left"},
+		{"id":"e5","fromNode":"xiaoxiangguan","toNode":"daoxiangcun","label":"南向","fromSide":"bottom","toSide":"top"},
+		{"id":"e6","fromNode":"hengwuyuan","toNode":"qiushuangzhai","label":"南向","fromSide":"bottom","toSide":"top"},
+		{"id":"e7","fromNode":"daoxiangcun","toNode":"ouxiangxie","label":"东南","fromSide":"bottom","toSide":"top"},
+		{"id":"e8","fromNode":"qiushuangzhai","toNode":"luxuean","label":"西南","fromSide":"bottom","toSide":"top"},
+		{"id":"e9","fromNode":"ouxiangxie","toNode":"aojingguan","label":"临水","fromSide":"bottom","toSide":"top"},
+		{"id":"e10","fromNode":"luxuean","toNode":"aojingguan","label":"临水","fromSide":"bottom","toSide":"top"}
+	],
+	"metadata":{
+		"version":"1.0-1.0",
+		"frontmatter":{}
+	}
+}

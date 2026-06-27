@@ -1,0 +1,339 @@
+---
+const path = Astro.url.pathname;
+const isActive = (href) => (href === '/' ? path === '/' : path.startsWith(href));
+const primary = [
+  ['/characters', '人物'],
+  ['/poems', '诗词'],
+  ['/fate', '命运·判词'],
+  ['/chapters', '章节'],
+  ['/graph', '关系图谱'],
+];
+const more = [
+  ['/themes', '主题'],
+  ['/clues', '线索'],
+  ['/places', '地点'],
+  ['/events', '事件'],
+  ['/objects', '器物'],
+  ['/folklore', '民俗'],
+  ['/charts', '图表'],
+];
+---
+
+<header class="site-header">
+  <div class="wrap bar">
+    <a href="/" class="brand plain" aria-label="红楼梦知识库 首页">
+      <img class="brand-seal" src="/印章.png" alt="红楼梦知识库 印" width="444" height="365" />
+      <span class="brand-name">红楼梦知识库</span>
+    </a>
+
+    <nav class="nav" id="nav" aria-label="主导航">
+      <div class="nav-links" id="nav-links">
+        {primary.map(([href, label]) => (
+          <a href={href} class:list={['nav-link plain', { active: isActive(href) }]}>{label}</a>
+        ))}
+        <details class="more">
+          <summary class="nav-link plain">探索</summary>
+          <div class="more-menu">
+            {more.map(([href, label]) => <a href={href} class="plain">{label}</a>)}
+          </div>
+        </details>
+      </div>
+
+      <div class="hsearch" id="hsearch">
+        <div class="hsearch-field" id="hsearch-field">
+          <span class="hsearch-ic" aria-hidden="true">⌕</span>
+          <input id="hsearch-q" type="search" autocomplete="off" spellcheck="false" tabindex="-1"
+                 placeholder="检索全库：林黛玉 · 葬花吟 · 判词…" aria-label="检索关键词" />
+          <button id="hsearch-clear" class="hsearch-clear" type="button" aria-label="清空" hidden>✕</button>
+        </div>
+        <button id="search-toggle" class="icon-btn" type="button" aria-label="检索" aria-expanded="false" title="检索全库">⌕</button>
+        <div class="hsearch-pop" id="search-pop" hidden>
+          <ul class="hsearch-results" id="hsearch-results" role="listbox" hidden></ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="actions">
+      <button id="theme-toggle" class="icon-btn" type="button" aria-label="切换明暗">☾</button>
+      <button id="nav-toggle" class="icon-btn only-mobile" type="button" aria-label="展开菜单" aria-expanded="false">≡</button>
+    </div>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    background: var(--bar-bg);
+    backdrop-filter: saturate(1.2) blur(10px);
+    border-bottom: 1px solid var(--bar-border);
+  }
+  .bar { display: flex; align-items: center; gap: 1.2rem; height: 4rem; }
+  .brand { display: inline-flex; align-items: center; gap: .6rem; }
+  .brand-seal {
+    height: 2.05rem; width: auto; flex: none; display: block;
+    object-fit: contain;
+    filter: drop-shadow(0 1px 1.5px rgba(120, 20, 10, .28));
+    transition: transform var(--speed) var(--ease);
+  }
+  .brand:hover .brand-seal { transform: rotate(-3deg) scale(1.04); }
+  .brand-name { font-family: var(--serif); font-size: 1.22rem; font-weight: 700; letter-spacing: .14em; color: var(--bar-fg); }
+  .nav { display: flex; align-items: center; gap: .2rem; margin-left: auto; position: relative; }
+  .nav-links {
+    display: flex; align-items: center; gap: .2rem;
+    transition: opacity var(--speed) var(--ease), transform var(--speed) var(--ease), filter var(--speed) var(--ease);
+  }
+  .nav.searching .nav-links {
+    opacity: 0; transform: translateX(-1.6rem) scaleX(.96); transform-origin: left center;
+    pointer-events: none; filter: blur(1px);
+  }
+  .nav-link {
+    color: color-mix(in srgb, var(--bar-fg) 78%, transparent); font-size: 1rem; padding: .4rem .8rem; border-radius: var(--radius);
+    letter-spacing: .04em; white-space: nowrap; transition: color var(--speed) var(--ease), background var(--speed) var(--ease);
+  }
+  .nav-link:hover { color: var(--bar-fg); background: var(--bar-hover); }
+  .nav-link.active { color: var(--bar-fg); font-weight: 700; box-shadow: inset 0 -2px 0 var(--cinnabar); }
+  .more { position: relative; }
+  .more > summary { list-style: none; cursor: pointer; }
+  .more > summary::-webkit-details-marker { display: none; }
+  .more-menu {
+    position: absolute; right: 0; top: calc(100% + .6rem); display: grid; gap: .1rem;
+    background: var(--paper-2); border: 1px solid var(--ink-hair); border-radius: var(--radius);
+    padding: .5rem; min-width: 7rem; box-shadow: var(--shadow);
+  }
+  .more-menu a { padding: .45rem .8rem; color: var(--ink-2); border-radius: var(--radius); }
+  .more-menu a:hover { color: var(--jade); background: var(--paper-sunk); }
+  /* ===== 顶部栏可展开检索 ===== */
+  .hsearch { display: inline-flex; align-items: center; }
+  #search-toggle { color: color-mix(in srgb, var(--bar-fg) 78%, transparent); position: relative; z-index: 62; }
+  .nav.searching #search-toggle { color: var(--bar-fg); background: var(--bar-hover); }
+  /* 放大镜 → 叉号：用伪元素旋转过渡 */
+  #search-toggle { font-size: 0; }
+  #search-toggle::before {
+    content: '⌕'; font-size: 1.75rem; line-height: 1; font-weight: 400;
+    transition: transform var(--speed) var(--ease), opacity var(--speed) var(--ease);
+  }
+  .nav.searching #search-toggle::before { content: '✕'; font-size: 1.4rem; }
+
+  /* 内联展开输入框：从放大镜处向左展开 */
+  .hsearch-field {
+    position: absolute; top: 50%; right: 2.6rem; transform: translateY(-50%);
+    display: flex; align-items: center; gap: .4rem; overflow: hidden;
+    width: 0; max-width: 0; opacity: 0; pointer-events: none;
+    padding: .2rem .9rem; box-sizing: border-box;
+    background: var(--paper-2); border: 1.5px solid var(--ink-hair); border-radius: 999px;
+    box-shadow: var(--shadow);
+    transition: width var(--speed) var(--ease), max-width var(--speed) var(--ease),
+                opacity var(--speed) var(--ease), border-color var(--speed) var(--ease),
+                box-shadow var(--speed) var(--ease);
+  }
+  .nav.searching .hsearch-field {
+    width: min(26rem, 52vw); max-width: 52vw; opacity: 1; pointer-events: auto;
+  }
+  .hsearch-field:focus-within { border-color: var(--cinnabar); box-shadow: var(--shadow), 0 0 0 3px color-mix(in srgb, var(--cinnabar) 14%, transparent); }
+  .hsearch-ic { font-size: 1.4rem; color: var(--ink-faint); flex: none; }
+  #hsearch-q {
+    flex: 1; min-width: 0; border: 0; background: transparent; padding: .6rem .1rem;
+    font-size: .98rem; font-family: var(--serif); color: var(--ink); outline: none;
+  }
+  #hsearch-q::-webkit-search-cancel-button { display: none; }
+  .hsearch-clear {
+    border: 0; background: transparent; cursor: pointer; color: var(--ink-faint);
+    font-size: .85rem; width: 1.6rem; height: 1.6rem; border-radius: 50%; flex: none;
+  }
+  .hsearch-clear:hover { color: var(--cinnabar); background: var(--paper-sunk); }
+  .hsearch-pop {
+    position: absolute; right: 0; top: calc(100% + .55rem); width: min(24rem, 78vw);
+    z-index: 60;
+  }
+  .hsearch-results {
+    margin-top: .5rem; list-style: none; display: grid; gap: .15rem; max-height: 22rem; overflow-y: auto;
+    padding: .4rem; background: var(--paper-2); border: 1px solid var(--ink-hair); border-radius: 12px;
+    box-shadow: var(--shadow);
+  }
+  .hsearch-results[hidden] { display: none; }
+  .hsearch-results[hidden] { display: none; }
+  .hsearch-results :global(.hsr-item) { border-radius: 8px; --fc: var(--cinnabar); }
+  .hsearch-results :global(.hsr-link) {
+    display: flex; align-items: baseline; gap: .55rem; padding: .55rem .7rem;
+    color: var(--ink); border-left: 3px solid var(--fc); border-radius: 0 8px 8px 0;
+  }
+  .hsearch-results :global(.hsr-item.active .hsr-link), .hsearch-results :global(.hsr-link:hover) { background: var(--paper-sunk); }
+  .hsearch-results :global(.hsr-ty) {
+    flex: none; font-size: .64rem; letter-spacing: .06em; color: #fff; background: var(--fc);
+    padding: .12em .5em; border-radius: 3px; align-self: center;
+  }
+  .hsearch-results :global(.hsr-t) { font-family: var(--serif); font-size: .98rem; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hsearch-results :global(.hsr-sub) { font-size: .72rem; color: var(--ink-faint); white-space: nowrap; margin-left: auto; flex: none; }
+  .hsearch-results :global(mark) { background: color-mix(in srgb, var(--gold) 40%, transparent); color: inherit; border-radius: 2px; padding: 0 .1em; }
+  .hsearch-results :global(.hsr-all) { text-align: center; }
+  .hsearch-results :global(.hsr-all .hsr-link) { justify-content: center; color: var(--cinnabar); font-weight: 600; border-left-color: transparent; font-size: .86rem; }
+  .hsearch-results :global(.hsr-none) { padding: .8rem 1rem; color: var(--ink-faint); font-size: .88rem; text-align: center; }
+
+  .actions { display: flex; align-items: center; gap: .2rem; }
+  .icon-btn {
+    display: inline-flex; align-items: center; justify-content: center; width: 2.6rem; height: 2.6rem;
+    font-size: 1.45rem; color: color-mix(in srgb, var(--bar-fg) 80%, transparent); background: transparent; border: 1px solid transparent;
+    border-radius: var(--radius); cursor: pointer; transition: all var(--speed) var(--ease);
+  }
+  .icon-btn:hover { color: var(--bar-fg); border-color: var(--bar-border); }
+  .only-mobile { display: none; }
+
+  @media (max-width: 780px) {
+    .nav {
+      position: fixed; inset: 4rem 0 auto 0; flex-direction: column; align-items: stretch; gap: 0;
+      background: var(--bar-bg); backdrop-filter: saturate(1.2) blur(12px); padding: .5rem 1.5rem 1.2rem;
+      transform: translateY(-130%); transition: transform var(--speed) var(--ease); box-shadow: var(--shadow);
+      border-bottom: 1px solid var(--bar-border);
+    }
+    .nav.open { transform: none; }
+    .nav-link { padding: .85rem .4rem; border-bottom: 1px solid var(--bar-border); }
+    .nav-link.active { box-shadow: none; color: var(--cinnabar); }
+    .more, .more-menu { position: static; box-shadow: none; border: 0; padding: 0; background: transparent; }
+    .more-menu { grid-template-columns: repeat(4, 1fr); padding: .4rem 0; }
+    .more-menu a { color: var(--bar-fg-2); }
+    .more-menu a:hover { color: var(--bar-fg); background: transparent; }
+    .only-mobile { display: inline-flex; }
+
+    .nav-links { display: flex; flex-direction: column; align-items: stretch; gap: 0; }
+    .nav.searching .nav-links { opacity: 1; transform: none; filter: none; pointer-events: auto; }
+
+    .hsearch { display: block; padding: .6rem 0; }
+    #search-toggle { display: none; }
+    .hsearch-field {
+      position: static; transform: none; width: 100%; max-width: 100%;
+      opacity: 1; pointer-events: auto; overflow: visible;
+    }
+    .hsearch-pop { position: static; width: 100%; }
+    .hsearch-pop[hidden] { display: block; }
+  }
+</style>
+
+<script>
+  const toggle = document.getElementById('nav-toggle');
+  const nav = document.getElementById('nav');
+  toggle?.addEventListener('click', () => {
+    const open = nav?.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', String(!!open));
+  });
+
+  // —— 顶部栏可展开 · 全库即时检索 —— //
+  (async () => {
+    const wrap = document.getElementById('hsearch');
+    const navEl = document.getElementById('nav');
+    const tgl = document.getElementById('search-toggle');
+    const pop = document.getElementById('search-pop');
+    const input = /** @type {HTMLInputElement|null} */ (document.getElementById('hsearch-q'));
+    const list = document.getElementById('hsearch-results');
+    const clearBtn = document.getElementById('hsearch-clear');
+    if (!wrap || !tgl || !pop || !input || !list || !clearBtn) return;
+
+    const { TYPE_COLOR } = await import('../lib/color.js');
+    const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const hl = (text, q) => {
+      const i = text.toLowerCase().indexOf(q.toLowerCase());
+      if (i < 0) return esc(text);
+      return esc(text.slice(0, i)) + '<mark>' + esc(text.slice(i, i + q.length)) + '</mark>' + esc(text.slice(i + q.length));
+    };
+    const searchUrl = (q) => '/search?q=' + encodeURIComponent(q);
+
+    let INDEX = [], view = [], active = -1, ready = false, loading = false;
+    function ensureIndex() {
+      if (ready || loading) return;
+      loading = true;
+      fetch('/search-index.json').then((r) => r.json())
+        .then((d) => { INDEX = d; ready = true; if (input.value.trim()) render(); })
+        .catch(() => { loading = false; });
+    }
+
+    function rank(q) {
+      const ql = q.toLowerCase();
+      const pool = INDEX.filter((e) => e.blob.includes(ql));
+      return pool.map((e) => {
+        const t = e.t.toLowerCase();
+        let s = 4;
+        if (t === ql) s = 0; else if (t.startsWith(ql)) s = 1; else if (t.includes(ql)) s = 2;
+        else if ((e.sub || '').toLowerCase().includes(ql)) s = 3;
+        return { e, s };
+      }).sort((a, b) => a.s - b.s || a.e.t.length - b.e.t.length).map((x) => x.e);
+    }
+
+    function closeList() { list.hidden = true; list.innerHTML = ''; active = -1; view = []; }
+
+    function render() {
+      const q = input.value.trim();
+      clearBtn.hidden = !q;
+      if (!q) { closeList(); return; }
+      if (!ready) { ensureIndex(); return; }
+      const all = rank(q);
+      view = all.slice(0, 7);
+      active = -1;
+      if (!view.length) {
+        list.innerHTML = `<li class="hsr-none">未找到「${esc(q)}」，<a class="plain" style="color:var(--cinnabar)" href="${searchUrl(q)}">前往检索页 →</a></li>`;
+        list.hidden = false; return;
+      }
+      const rows = view.map((e) => {
+        const fc = TYPE_COLOR[e.ty] || 'var(--cinnabar)';
+        return `<li class="hsr-item" role="option" style="--fc:${fc}" data-href="/${e.r}/${encodeURIComponent(e.s)}">
+          <a class="hsr-link plain" href="/${e.r}/${encodeURIComponent(e.s)}">
+            <span class="hsr-ty">${esc(e.ty)}</span>
+            <span class="hsr-t">${hl(e.t, q)}</span>
+            ${e.sub ? `<span class="hsr-sub">${esc(e.sub)}</span>` : ''}
+          </a></li>`;
+      }).join('');
+      const more = all.length > view.length
+        ? `<li class="hsr-item hsr-all"><a class="hsr-link plain" href="${searchUrl(q)}">查看全部 ${all.length} 条结果 →</a></li>`
+        : '';
+      list.innerHTML = rows + more;
+      list.hidden = false;
+    }
+
+    function setActive(n) {
+      const items = list.querySelectorAll('.hsr-item');
+      if (!items.length) return;
+      active = (n + items.length) % items.length;
+      items.forEach((el, i) => el.classList.toggle('active', i === active));
+      items[active].scrollIntoView({ block: 'nearest' });
+    }
+
+    function isOpen() { return navEl?.classList.contains('searching'); }
+    function openPop() {
+      pop.hidden = false;
+      navEl?.classList.add('searching');
+      wrap.classList.add('open');
+      tgl.setAttribute('aria-expanded', 'true');
+      tgl.setAttribute('aria-label', '关闭检索');
+      input.removeAttribute('tabindex');
+      ensureIndex();
+      setTimeout(() => input.focus(), 220);
+      if (input.value.trim()) render();
+    }
+    function closePop() {
+      pop.hidden = true;
+      navEl?.classList.remove('searching');
+      wrap.classList.remove('open');
+      tgl.setAttribute('aria-expanded', 'false');
+      tgl.setAttribute('aria-label', '检索');
+      input.setAttribute('tabindex', '-1');
+      closeList();
+    }
+
+    tgl.addEventListener('click', () => { isOpen() ? closePop() : openPop(); });
+    input.addEventListener('input', render);
+    input.addEventListener('focus', () => { if (input.value.trim()) render(); });
+    clearBtn.addEventListener('click', () => { input.value = ''; closeList(); input.focus(); });
+    input.addEventListener('keydown', (ev) => {
+      if (ev.key === 'ArrowDown') { ev.preventDefault(); setActive(active + 1); }
+      else if (ev.key === 'ArrowUp') { ev.preventDefault(); setActive(active - 1); }
+      else if (ev.key === 'Enter') {
+        ev.preventDefault();
+        const items = list.querySelectorAll('.hsr-item');
+        if (active >= 0 && items[active]) location.href = items[active].getAttribute('data-href') || items[active].querySelector('a').getAttribute('href');
+        else if (input.value.trim()) location.href = searchUrl(input.value.trim());
+      } else if (ev.key === 'Escape') { closePop(); tgl.focus(); }
+    });
+    document.addEventListener('click', (ev) => {
+      if (window.matchMedia('(max-width: 780px)').matches) return;
+      if (!wrap.contains(ev.target)) closePop();
+    });
+  })();
+</script>
